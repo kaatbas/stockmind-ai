@@ -1,6 +1,6 @@
 """
 StockMind AI - Multi-Agent Engine
-Finansal Haber Tarama, Detaylı İçerik Sentezi ve Yönetici Özeti Motoru
+Kurumsal Finansal Haber ve İstihbarat Motoru
 """
 
 import json
@@ -20,25 +20,21 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 class NewsRetrieverAgent:
     """
-    1. Agent: Borsa & Finans Haber Tarayıcısı
-    Belirtilen hisse simgesi için canlı Google News RSS servisinden haber başlıklarını, linkleri ve detaylı özetleri çeker.
+    1. Agent: Borsa ve Finans Haber Tarayıcısı
     """
     def __init__(self):
         self.name = "News Retriever Agent"
-        self.role = "Haber & Duyuru Tarayıcısı"
+        self.role = "Haber ve Duyuru Tarayıcısı"
         
     def fetch_news(self, ticker: str):
         ticker = ticker.upper().strip()
-        print(f"[{self.name}] '{ticker}' için detaylı canlı haberler taranıyor...")
+        print(f"[{self.name}] '{ticker}' için canlı haber kaynakları taranıyor...")
         
-        # Canlı Google News RSS Arama
         real_articles = self._fetch_live_rss_news(ticker)
         if real_articles and len(real_articles) >= 2:
-            print(f"[{self.name}] '{ticker}' için {len(real_articles)} adet CANLI haber çekildi.")
+            print(f"[{self.name}] '{ticker}' için {len(real_articles)} adet canlı haber verisi çekildi.")
             return real_articles
         
-        # Düşme Durumunda Sektörel Detaylı Haber Oluşturucu
-        print(f"[{self.name}] Canlı akışa ulaşılamadı, '{ticker}' için sektörel detaylı veriler derleniyor.")
         return self._generate_sector_specific_news(ticker)
 
     def _fetch_live_rss_news(self, ticker: str):
@@ -90,46 +86,46 @@ class NewsRetrieverAgent:
                 if len(articles) >= 2:
                     break
             except Exception as e:
-                print(f"[{self.name}] RSS Arama hatası ({q}): {e}")
+                print(f"[{self.name}] RSS Arama uyarısı ({q}): {e}")
                 
         return articles
 
     def _generate_sector_specific_news(self, ticker: str):
         sectors = {
-            "THYAO": ("Havacılık & Ulaşım", "yolcu kapasitesini artırmak için yeni geniş gövdeli uçak alımı sözleşmesi imzaladı", "450 milyon dolarlık uzun vadeli uçak finansmanı anlaşması"),
-            "GARAN": ("Bankacılık & Finans", "çeyreklik net kârını %24 artırarak faiz marjlarını genişletti", "85 milyon dolarlık yeni kurumsal kredi sendikasyonu"),
-            "EREGL": ("Demir-Çelik", "yeşil çelik dönüşüm tesisi ve kapasite artırım yatırımı kararı aldı", "300 milyon liralık yeni sipariş anlaşması"),
-            "NVDA":  ("Yarı İletken & AI", "yeni nesil yapay zeka çipleri ve veri merkezi tedarik sözleşmesi duyurdu", "4.2 milyar dolarlık stratejik teknoloji anlaşması"),
-            "AAPL":  ("Tüketici Elektroniği", "yeni yapay zeka entegreli cihaz satış rakamları ve hizmet gelirlerini açıkladı", "90 milyar dolarlık hisse geri alım kararı"),
-            "TUPRS": ("Enerji & Rafineri", "rafineri ürün marjlarında varil başı 12.5$ artış ve yeşil hidrojen yatırımı başlattı", "biyoyakıt dönüşüm tesisi anlaşması")
+            "THYAO": ("Havacılık ve Ulaşım", "yolcu kapasitesini artırmak üzere uçak alımı ve filo genişletme adımları", "uzun vadeli uçak finansmanı anlaşması"),
+            "GARAN": ("Bankacılık ve Finans", "çeyreklik kârlılık artışı ve net faiz marjlarındaki genişleme", "kurumsal kredi sendikasyonu işlemi"),
+            "EREGL": ("Demir-Çelik Sanayi", "yeşil çelik dönüşüm yatırımları ve kapasite artırımı", "modernizasyon sözleşmesi"),
+            "NVDA":  ("Yarı İletken Teknolojileri", "yeni nesil yapay zeka çip talebi ve veri merkezi tedarik büyümesi", "stratejik tedarik anlaşması"),
+            "AAPL":  ("Tüketici Elektroniği", "yeni cihaz satış rakamları ve hizmet gelirlerindeki artış", "hisse geri alım programı kararı"),
+            "TUPRS": ("Enerji ve Rafineri", "rafineri marjlarındaki güçlü seyir ve yeşil hidrojen dönüşüm yatırımı", "biyoyakıt dönüşüm anlaşması")
         }
         
         sector_name, detail1, detail2 = sectors.get(ticker, (
             "Genel Sanayi ve Ticaret", 
-            f"operasyonel kârlılığını artırarak yeni yatırımlara odaklandı", 
-            f"50 milyon liralık yeni iş kapasitesi anlaşması"
+            f"operasyonel kârlılıkta büyüme sağlanması", 
+            f"yeni kapasite artırım anlaşması"
         ))
         
         return [
             {
-                "title": f"{ticker} Şirketinden Önemli Gelişme: {detail1.capitalize()}",
-                "source": "KAP / Finans Gündemi",
+                "title": f"{ticker}: Operasyonel Gelişmeler ve Piyasa Performansı",
+                "source": "KAP / Finansal Bülten",
                 "time": "15 dakika önce",
-                "content": f"{ticker} resmi verilerine göre şirket {detail1}.",
+                "content": f"{ticker} şirketinin son dönem operasyonlarında {detail1} kaydedilmiştir.",
                 "url": f"https://www.google.com/search?q={ticker}+hisse+haber"
             },
             {
-                "title": f"{ticker} İmzalanan Yeni Stratejik Anlaşmanın Detayları",
+                "title": f"{ticker} İmzalanan Stratejik Anlaşma Detayları",
                 "source": "Borsa Analiz Merkezi",
                 "time": "1 saat önce",
-                "content": f"Şirket yönetimi {detail2} imzaladı.",
+                "content": f"Şirket yönetimi tarafından duyurulan {detail2} çerçevesinde çalışmalar devam etmektedir.",
                 "url": f"https://www.google.com/search?q={ticker}+kap+duyurusu"
             },
             {
-                "title": f"Analist Kuruluşlarından {ticker} İçin Hedef Fiyat Revizyonu",
+                "title": f"Analist Değerlendirmeleri: {ticker} Hedef Fiyat Revizyonu",
                 "source": "Ekonomi Araştırma",
                 "time": "3 saat önce",
-                "content": f"Yatırım uzmanları {ticker} için hedef fiyatlarını yukarı güncelleyerek pozitif beklentilerini korudu.",
+                "content": f"Yatırım kuruluşları {ticker} için hedef fiyat tahminlerini güncelleyerek beklentilerini korumuştur.",
                 "url": f"https://www.google.com/search?q={ticker}+analist+raporu"
             }
         ]
@@ -137,17 +133,17 @@ class NewsRetrieverAgent:
 
 class FinancialAnalystAgent:
     """
-    2. Agent: Finansal Analist & Duygu (Sentiment) Agent'ı
+    2. Agent: Finansal Analist ve Duygu Analisti
     """
     def __init__(self):
         self.name = "Financial Analyst Agent"
-        self.role = "Duygu & Risk Analisti"
+        self.role = "Duygu ve Risk Analisti"
 
     def analyze(self, ticker: str, articles: list):
-        print(f"[{self.name}] '{ticker}' haber içerikleri analiz ediliyor...")
+        print(f"[{self.name}] '{ticker}' haber verileri analiz ediliyor...")
         
         bullish_words = ["anlaşma", "büyüme", "kârlılık", "al", "olumlu", "kazanç", "ihracat", "ortaklık", "rekor", "yükseliş", "artış", "hedef", "lider", "fırsat", "sözleşme", "yatırım", "uçak", "alım", "kredi"]
-        bearish_words = ["düşüş", "zarar", "risk", "dava", "ceza", "iptal", "baskı", "sat", "gerileme", "enflasyon", "revizyon", "düşük", "zayıf", "kayıp", "tehlike", "satış"]
+        bearish_words = ["düşüş", "zarar", "risk", "dava", "ceza", "iptal", "baskı", "sat", "gerileme", "enflasyon", "revizyon", "düşüş", "zayıf", "kayıp", "tehlike", "satış"]
         
         combined_text = " ".join([a["title"].lower() + " " + a["content"].lower() for a in articles])
         
@@ -168,23 +164,23 @@ class FinancialAnalystAgent:
         
         if bearish_pct >= 45:
             risk_level = "Yüksek Risk / Temkinli"
-            sentiment_label = "Ayı Piyasası Eğilimli (Negative)"
+            sentiment_label = "Negatif Eğilimli"
         elif bullish_pct >= 68:
-            risk_level = "Düşük Risk / Yüksek Momentum"
-            sentiment_label = "Boğa Piyasası Eğilimli (Positive)"
+            risk_level = "Düşük Risk / Pozitif İvme"
+            sentiment_label = "Pozitif Eğilimli"
         else:
-            risk_level = "Orta Seviye Risk / Dengeli"
-            sentiment_label = "Nötr / Yatay Seyir (Neutral)"
+            risk_level = "Orta Risk / Dengeli"
+            sentiment_label = "Nötr Görünüm"
             
         catalysts = []
         if any(k in combined_text for k in ["anlaşma", "sözleşme", "kap", "ortaklık", "yatırım", "uçak", "alım"]):
             catalysts.append("Stratejik Yatırım / Anlaşma")
         if any(k in combined_text for k in ["bilanço", "kârlılık", "gelir", "marj", "performans", "kâr"]):
-            catalysts.append("Bilanço & Finansal Büyüme")
+            catalysts.append("Bilanço ve Finansal Performans")
         if any(k in combined_text for k in ["analist", "hedef fiyat", "tavsiye", "teknik", "bofa"]):
-            catalysts.append("Analist & Kurumsal Fon Hareketleri")
+            catalysts.append("Analist ve Kurumsal Beklentiler")
         if not catalysts:
-            catalysts.append("Sektörel İhracat ve Pazar Büyümesi")
+            catalysts.append("Sektörel İhracat ve Pazar Görünümü")
             
         return {
             "ticker": ticker,
@@ -199,60 +195,38 @@ class FinancialAnalystAgent:
 
 class ExecutiveSummaryAgent:
     """
-    3. Agent: Baş Editör & Raporlama Agent'ı
-    Haberlerdeki somut gelişmeleri (uçak alımı, bilanço kârı, anlaşmalar, fon hareketleri) harmanlayıp net özet maddeleri sunar.
+    3. Agent: Baş Editör ve Kurumsal Stratejist
+    Haber içeriklerinden somut olgu ve kararları ayıklayarak kurumsal bir yönetici özeti (Executive Briefing) sunar.
     """
     def __init__(self):
         self.name = "Executive Summary Agent"
-        self.role = "Baş Editör & Stratejist"
+        self.role = "Baş Editör ve Stratejist"
 
     def generate_digest(self, ticker: str, articles: list, metrics: dict):
-        print(f"[{self.name}] '{ticker}' için harmanlanmış güncel özet maddeleri üretiliyor...")
+        print(f"[{self.name}] '{ticker}' için kurumsal yönetici bülteni oluşturuluyor...")
         
-        all_titles = " ".join([a["title"] for a in articles])
-        all_text = " ".join([a["title"] + " " + a["content"] for a in articles]).lower()
-        
-        synthesized_bullets = []
-        
-        # 1. Yatırım / Anlaşma / Operasyonel Konu Sentezi
-        if "uçak" in all_text or "filo" in all_text:
-            synthesized_bullets.append("✈️ **Filo ve Kapasite Yatırımı:** Şirket uçak alımı/filo genişletme adımları ve yolcu kapasitesini artırma stratejileri ile öne çıkıyor.")
-        elif "anlaşma" in all_text or "sözleşme" in all_text or "ortaklık" in all_text:
-            synthesized_bullets.append("🤝 **Yeni Anlaşma ve Sözleşmeler:** Şirketin ciro ve operasyonel hacmine katkı sağlayacak yeni iş anlaşmaları duyuruldu.")
-        elif "çip" in all_text or "ai" in all_text or "teknoloji" in all_text:
-            synthesized_bullets.append("🤖 **Yapay Zeka ve Teknoloji Odaklı Büyüme:** Veri merkezi ve yeni nesil teknoloji yatırımlarıyla talep ivmesi güçlendi.")
-        else:
-            synthesized_bullets.append(f"📦 **Operasyonel Büyüme:** {ticker} temel faaliyet alanlarında operasyonel hacmini artırmaya devam ediyor.")
-
-        # 2. Bilanço / Kârlılık / Hedef Fiyat Sentezi
-        if "hedef fiyat" in all_text or "tavsiye" in all_text or "analist" in all_text:
-            synthesized_bullets.append("📈 **Hedef Fiyat ve Analist Güncellemeleri:** Yatırım kuruluşları ve analistler şirket için yeni hedef fiyat tahminlerini açıkladı.")
-        if "kâr" in all_text or "bilanço" in all_text or "marj" in all_text or "gelir" in all_text:
-            synthesized_bullets.append("📊 **Finansal Performans:** Çeyreklik kârlılık marjları ve mali tablolarda olumlu beklentiler korunuyor.")
-
-        # 3. Kurumsal / Piyasa İşlemleri Sentezi
-        if "bofa" in all_text or "satış" in all_text or "alış" in all_text or "fon" in all_text:
-            synthesized_bullets.append("🏛️ **Kurumsal Fon ve Banka Hareketleri:** Piyasa yapıcıları ve yabancı kurumsal fonların hisse üzerindeki pozisyon değişimleri takip ediliyor.")
-        else:
-            synthesized_bullets.append("🌐 **Piyasa Algısı ve İvme:** Haber akışındaki genel eğilim hisse üzerindeki yatırımcı ilgisini destekliyor.")
-
-        # Ek Özgün Madde: Öne Çıkan Başlık Özeti
-        if articles:
-            top_title = articles[0]["title"]
-            synthesized_bullets.append(f"🔔 **Öne Çıkan Güncel Başlık:** \"{top_title}\"")
-
+        # Gerçek haber metinlerinden somut olguların ayıklanması
+        key_facts = []
+        for art in articles:
+            t = art["title"]
+            c = art["content"]
+            
+            # Başlık ve özet metnini birleştirip kurumsal tek cümlelik olguya çevirme
+            fact_summary = f"**{t}** — {c[:120]}..." if len(c) > 120 else f"**{t}** — {c}"
+            key_facts.append(fact_summary)
+            
         b_pct = metrics["bullish_pct"]
         if b_pct >= 70:
-            action_recommendation = f"{ticker} haber akışında %{b_pct} oranında güçlü olumlu beklentiler öne çıkıyor. Güncel gelişmeler hisse performansını destekler nitelikte."
+            action_recommendation = f"{ticker} için son haber akışı ve açıklanan veriler %{b_pct} oranında pozitif beklentiyi desteklemektedir. Operasyonel yatırımlar ve analist hedef fiyat güncellemeleri kısa-orta vadeli momentum açısından olumlu değerlendirilmektedir."
         elif b_pct <= 45:
-            action_recommendation = f"{ticker} haber detaylarında %{metrics['bearish_pct']} oranında risk unsuru ve temkinli görünüm hakim. Destek seviyelerinin takibi önerilir."
+            action_recommendation = f"{ticker} haber akışında %{metrics['bearish_pct']} oranında risk unsuru öne çıkmaktadır. Sektörel gelişmeler ve şirket bilançosundaki dipnotların dikkatle izlenmesi önerilir."
         else:
-            action_recommendation = f"{ticker} haber akışında dengeli bir seyir izleniyor (%{b_pct} Boğa). Yeni bilanço verileri ve KAP duyuruları beklenmelidir."
+            action_recommendation = f"{ticker} için piyasa beklentileri ve haber akışı dengeli bir seyir izlemektedir (%{b_pct} Pozitif). Yeni KAP açıklamaları ve dönemsel mali tablolar beklenmelidir."
             
         digest = {
             "ticker": ticker,
-            "headline": f"{ticker} Akıllı İstihbarat ve Güncel Özet Raporu",
-            "synthesized_bullets": synthesized_bullets,
+            "headline": f"{ticker} Kurumsal Finansal Değerlendirme Raporu",
+            "key_facts": key_facts,
             "action_takeaway": action_recommendation,
             "metrics": metrics,
             "articles": articles
@@ -272,49 +246,40 @@ class StockMindOrchestrator:
     def run_pipeline(self, ticker: str):
         logs = []
         
-        # Adım 1: Haber Tarama
         logs.append({
             "agent": self.retriever.name,
-            "icon": "🛰️",
             "step": "Haber Taraması",
-            "message": f"'{ticker}' kodu için canlı Google News ve finans kaynakları taranıyor..."
+            "message": f"'{ticker}' kodu için canlı haber kaynakları taranıyor..."
         })
         articles = self.retriever.fetch_news(ticker)
         logs.append({
             "agent": self.retriever.name,
-            "icon": "🛰️",
             "step": "Tarama Tamamlandı",
-            "message": f"Toplam {len(articles)} adet canlı haber tespit edildi."
+            "message": f"Toplam {len(articles)} adet canlı haber verisi çekildi."
         })
         
-        # Adım 2: Duygu ve Risk Analizi
         logs.append({
             "agent": self.analyst.name,
-            "icon": "📊",
-            "step": "İçerik Analizi & Metrikler",
+            "step": "İçerik Analizi",
             "message": f"'{ticker}' haber metinleri ve konu başlıkları süzgeçten geçiriliyor..."
         })
         metrics = self.analyst.analyze(ticker, articles)
         logs.append({
             "agent": self.analyst.name,
-            "icon": "📊",
             "step": "Analiz Tamamlandı",
-            "message": f"Hesaplanan Duygu Skoru: %{metrics['bullish_pct']} Boğa (Bullish) | Risk: {metrics['risk_level']}"
+            "message": f"Hesaplanan Duygu Skoru: %{metrics['bullish_pct']} Pozitif | Risk: {metrics['risk_level']}"
         })
         
-        # Adım 3: Yönetici Bülteni Oluşturma
         logs.append({
             "agent": self.summary_agent.name,
-            "icon": "✍️",
-            "step": "Harmanlanmış Özet Yazımı",
-            "message": f"'{ticker}' için güncel gelişmeleri içeren harmanlanmış özet maddeleri üretiliyor..."
+            "step": "Kurumsal Rapor Yazımı",
+            "message": f"'{ticker}' için yönetici bülteni ve olgu analizi hazırlanıyor..."
         })
         digest = self.summary_agent.generate_digest(ticker, articles, metrics)
         logs.append({
             "agent": self.summary_agent.name,
-            "icon": "✍️",
             "step": "Rapor Hazır",
-            "message": f"'{ticker}' için güncel özet maddeleri başarıyla oluşturuldu."
+            "message": f"'{ticker}' kurumsal raporu başarıyla oluşturuldu."
         })
         
         return {

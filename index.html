@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StockMind AI — Borsa Haber & Duygu Analizi Agent Platformu</title>
-  <meta name="description" content="Takip ettiğiniz hisseler için web'den güncel finansal haberleri toplayan, duygu/risk analizi yapan ve yönetici özeti üreten Multi-Agent platformu.">
+  <title>StockMind AI — Kurumsal Finansal Haber ve Duygu Analizi Platformu</title>
+  <meta name="description" content="Takip edilen hisse senetleri için finansal haberleri ve duyuruları derleyen, duygu ve risk analizi yapan kurumsal Multi-Agent platformu.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,15 +13,15 @@
   <header>
     <div class="container header-content">
       <div class="brand">
-        <div class="logo-icon">📈</div>
+        <div class="logo-box">STOCKMIND</div>
         <div>
           <h1 class="brand-title">StockMind AI</h1>
-          <p class="brand-tagline">Multi-Agent Borsa İstihbarat & Raporlama Platformu</p>
+          <p class="brand-tagline">Multi-Agent Borsa İstihbarat ve Raporlama Platformu</p>
         </div>
       </div>
       <div class="header-status">
         <span class="pulse-dot"></span>
-        <span>Agent Ekibi Aktif & Hazır</span>
+        <span>Sistem Aktif</span>
       </div>
     </div>
   </header>
@@ -30,16 +30,16 @@
     
     <!-- Search & Control Panel -->
     <section class="search-section">
-      <h2 class="search-title">🔍 Hisse Senedi Analizi Başlat</h2>
+      <h2 class="search-title">Hisse Senedi Analizi</h2>
       <div class="input-group">
-        <input type="text" id="tickerInput" class="ticker-input" placeholder="Hisse Kodu girin (Örn: THYAO, GARAN, EREGL, NVDA, AAPL)" value="THYAO" autocomplete="off" />
+        <input type="text" id="tickerInput" class="ticker-input" placeholder="Hisse kodu girin (Örn: THYAO, GARAN, EREGL, NVDA, AAPL)" value="THYAO" autocomplete="off" />
         <button id="btnAnalyze" class="btn-analyze">
-          <span>🚀 Analiz Et</span>
+          <span>Analiz Et</span>
         </button>
       </div>
       
       <div class="watchlist-bar">
-        <span class="watchlist-label">Hızlı Takip Listesi:</span>
+        <span class="watchlist-label">Takip Listesi:</span>
         <button class="chip-ticker" data-ticker="THYAO">THYAO</button>
         <button class="chip-ticker" data-ticker="GARAN">GARAN</button>
         <button class="chip-ticker" data-ticker="EREGL">EREGL</button>
@@ -53,38 +53,35 @@
     <section class="pipeline-section">
       <div id="cardAgentRetriever" class="agent-card">
         <div class="agent-header">
-          <span class="agent-avatar">🛰️</span>
           <div>
             <div class="agent-name">News Retriever Agent</div>
-            <div class="agent-role">Haber & KAP Tarayıcısı</div>
+            <div class="agent-role">Haber ve Duyuru Tarayıcısı</div>
           </div>
           <span class="agent-status-badge" id="badgeRetriever">Hazır</span>
         </div>
-        <p style="font-size:12px; color:var(--text-muted);">Web kaynaklarından ve finansal bültenlerden güncel verileri toplar.</p>
+        <p style="font-size:12px; color:var(--text-muted);">Açık kaynaklardan ve borsa duyurularından güncel verileri derler.</p>
       </div>
 
       <div id="cardAgentAnalyst" class="agent-card">
         <div class="agent-header">
-          <span class="agent-avatar">📊</span>
           <div>
             <div class="agent-name">Financial Analyst Agent</div>
-            <div class="agent-role">Duygu & Risk Analisti</div>
+            <div class="agent-role">Duygu ve Risk Analisti</div>
           </div>
           <span class="agent-status-badge" id="badgeAnalyst">Hazır</span>
         </div>
-        <p style="font-size:12px; color:var(--text-muted);">Boğa/Ayı skorlaması, risk derecesi ve katalizör tespiti yapar.</p>
+        <p style="font-size:12px; color:var(--text-muted);">Piyasa beklentileri, risk derecesi ve katalizör tespiti yapar.</p>
       </div>
 
       <div id="cardAgentSummary" class="agent-card">
         <div class="agent-header">
-          <span class="agent-avatar">✍️</span>
           <div>
             <div class="agent-name">Executive Summary Agent</div>
-            <div class="agent-role">Baş Editör & Stratejist</div>
+            <div class="agent-role">Baş Editör ve Stratejist</div>
           </div>
           <span class="agent-status-badge" id="badgeSummary">Hazır</span>
         </div>
-        <p style="font-size:12px; color:var(--text-muted);">Yatırımcıya 30 saniyede karar aldıracak net bülteni derler.</p>
+        <p style="font-size:12px; color:var(--text-muted);">Kurumsal yönetici bülteni ve olgu özetlerini derler.</p>
       </div>
     </section>
 
@@ -97,21 +94,20 @@
         <!-- Summary Digest Card -->
         <article class="card">
           <div class="card-title">
-            <span id="digestHeadline">📋 Hisse İstihbarat Raporu</span>
+            <span id="digestHeadline">Yönetici Finansal Raporu</span>
             <span id="badgeRisk" style="font-size:12px; padding:4px 12px; border-radius:12px; background:rgba(255,255,255,0.08);">Bekleniyor</span>
           </div>
 
           <div id="resultsContainer">
             <div class="placeholder-state">
-              <div class="placeholder-icon">📊</div>
-              <p>Analiz başlatmak için yukarıdaki arama kutusuna hisse kodu girin veya hızlı takip listesinden birine tıklayın.</p>
+              <p>Analiz başlatmak için bir hisse senedi simgesi girin veya takip listesinden seçim yapın.</p>
             </div>
           </div>
         </article>
 
         <!-- Articles List Card -->
         <article class="card" id="articlesCard" style="display:none;">
-          <div class="card-title">📰 Taranan Haberler ve Duyurular</div>
+          <div class="card-title">Taranan Haberler ve Duyurular</div>
           <div id="articlesList"></div>
         </article>
 
@@ -123,27 +119,27 @@
         <!-- Real-time Agent Log -->
         <aside class="card">
           <div class="card-title">
-            <span>💻 Agent Düşünce Akışı</span>
+            <span>Agent Konsol Akışı</span>
             <span style="font-size:11px; color:var(--accent-cyan);">Live Console</span>
           </div>
           <div id="terminalLog" class="terminal-box">
             <div class="log-entry">
               <span class="log-time">[System]</span>
-              <span class="log-msg">StockMind AI Agent ekibi hazır. Görev bekleniyor...</span>
+              <span class="log-msg">StockMind AI Agent altyapısı hazır. Görev bekleniyor...</span>
             </div>
           </div>
         </aside>
 
         <!-- System Architecture Info -->
         <aside class="card">
-          <div class="card-title">ℹ️ Sistem Mimarisi</div>
+          <div class="card-title">Sistem Mimarisi</div>
           <p style="font-size:13px; color:var(--text-muted); line-height:1.6; margin-bottom:12px;">
-            Bu uygulama <strong>Multi-Agent Orgestrasyonu</strong> ile çalışır. Her agent uzmanlaşmış kendi rolünü sırayla icra eder:
+            Platform modüler temsilci orkestrasyonu ile çalışır:
           </p>
           <ul style="font-size:12px; color:var(--text-muted); padding-left:16px; line-height:1.6;">
-            <li><strong>1. Adım:</strong> Veri Toplama & Temizleme</li>
-            <li><strong>2. Adım:</strong> Doğal Dil Süzgeci & Skorlama</li>
-            <li><strong>3. Adım:</strong> Sentez & Yönetici Özeti</li>
+            <li><strong>Veri Derleme:</strong> Haber ve KAP Akışı</li>
+            <li><strong>Anlamsal İşleme:</strong> Pozitif / Negatif Süzgeç</li>
+            <li><strong>Raporlama:</strong> Kurumsal Yönetici Bülteni</li>
           </ul>
         </aside>
 
