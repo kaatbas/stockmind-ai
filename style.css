@@ -364,14 +364,32 @@ header {
   transition: width 0.8s ease;
 }
 
-/* Key Takeaways & Bullets */
-.bullets-list-detailed {
+/* Synthesized Summary Bullets */
+.bullets-list-synthesized {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 24px;
 }
+
+.bullet-item-synthesized {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-blue);
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--text-main);
+  line-height: 1.6;
+  transition: all 0.2s ease;
+}
+
+.bullet-item-synthesized:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
 
 .bullet-item-detailed {
   background: rgba(255, 255, 255, 0.03);

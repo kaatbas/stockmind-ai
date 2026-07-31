@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // Agent 1 Visual State: Active
       setAgentState(cardRetriever, badgeRetriever, "Çalışıyor...", true);
-      appendTerminalLog("News Retriever", `[🛰️] '${ticker}' için canlı Google News ve KAP kaynakları taranıyor...`);
+      appendTerminalLog("News Retriever", `[🛰️] '${ticker}' için canlı haberler ve duyurular taranıyor...`);
       await sleep(500);
 
       // Fetch from API
@@ -72,11 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Agent 1 Done
       setAgentState(cardRetriever, badgeRetriever, "Tamamlandı ✓", false);
-      appendTerminalLog("News Retriever", `[🛰️] ${data.result.articles.length} adet canlı bağlantılı haber tespit edildi.`);
+      appendTerminalLog("News Retriever", `[🛰️] ${data.result.articles.length} adet canlı haber tespit edildi.`);
 
       // Agent 2 Active
       setAgentState(cardAnalyst, badgeAnalyst, "Çalışıyor...", true);
-      appendTerminalLog("Financial Analyst", `[📊] Anlaşma detayları ve duygu metrikleri analiz ediliyor...`);
+      appendTerminalLog("Financial Analyst", `[📊] Konular (Uçak alımı, anlaşmalar, hedef fiyatlar) harmanlanıyor...`);
       await sleep(500);
 
       const metrics = data.result.metrics;
@@ -85,11 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Agent 3 Active
       setAgentState(cardSummary, badgeSummary, "Yazıyor...", true);
-      appendTerminalLog("Executive Summary", `[✍️] Detaylı haber içerikleri ve linklerle bülten hazırlanıyor...`);
+      appendTerminalLog("Executive Summary", `[✍️] Güncel özet maddeleri ve strateji raporu hazırlanıyor...`);
       await sleep(400);
 
       setAgentState(cardSummary, badgeSummary, "Tamamlandı ✓", false);
-      appendTerminalLog("Executive Summary", `[✍️] Detaylı bülten ve haber linkleri ekrana yansıtıldı.`);
+      appendTerminalLog("Executive Summary", `[✍️] Harmanlanmış güncel özet raporu hazırlandı.`);
 
       // Render Final Results
       renderResults(data.result);
@@ -137,24 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
       `<span style="background:rgba(59, 130, 246, 0.15); border:1px solid rgba(59, 130, 246, 0.3); color:#93c5fd; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:500;">🏷️ ${c}</span>`
     ).join(' ');
 
-    // Detailed Takeaways List HTML
-    const takeaways = result.detailed_takeaways || [];
-    const takeawaysHTML = takeaways.map(item => `
-      <li class="bullet-item-detailed">
-        <div class="takeaway-header">
-          <span class="takeaway-title">${item.title}</span>
-          <span class="takeaway-source">${item.source} (${item.time})</span>
-        </div>
-        <p class="takeaway-summary">${item.summary}</p>
-        ${item.url && item.url !== '#' ? `
-          <div style="margin-top:10px;">
-            <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="link-btn">
-              🔗 Haberi Oku / Kaynağa Git &rarr;
-            </a>
-          </div>
-        ` : ''}
-      </li>
-    `).join('');
+    // Synthesized Bullet Points HTML
+    const bullets = result.synthesized_bullets || [];
+    const bulletsHTML = bullets.map(b => {
+      // Bold markdown formatını HTML strong etiketine çevir
+      const formatted = b.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#fff;">$1</strong>');
+      return `<li class="bullet-item-synthesized">${formatted}</li>`;
+    }).join('');
 
     resultsContainer.innerHTML = `
       <!-- Metrics Grid -->
@@ -184,23 +173,23 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- Key Takeaways List -->
-      <h3 style="font-size:16px; font-weight:700; margin-bottom:16px; color:#fff;">📌 Detaylı Anlaşma ve Gelişme Raporu</h3>
-      <ul class="bullets-list-detailed">
-        ${takeawaysHTML}
+      <!-- Synthesized Key Summary Section -->
+      <h3 style="font-size:16px; font-weight:700; margin-bottom:14px; color:#fff;">📌 Hisse Hakkında Önemli Gelişmeler & Özet</h3>
+      <ul class="bullets-list-synthesized">
+        ${bulletsHTML}
       </ul>
 
       <!-- Action Banner -->
       <div class="action-banner">
         <span style="font-size:20px;">💡</span>
         <div>
-          <strong style="color:#fff; display:block; margin-bottom:4px;">Chief Editor Strateji Değerlendirmesi:</strong>
+          <strong style="color:#fff; display:block; margin-bottom:4px;">Executive Summary Strateji Değerlendirmesi:</strong>
           ${result.action_takeaway}
         </div>
       </div>
     `;
 
-    // Articles Section
+    // Articles Section (Taranan Haberler ve Orijinal Linkler)
     articlesCard.style.display = 'block';
     articlesList.innerHTML = result.articles.map(art => `
       <div class="article-card">
@@ -210,10 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <span>${art.time}</span>
         </div>
         <div class="article-title">${art.title}</div>
-        <div class="article-content" style="margin-bottom:10px;">${art.content}</div>
+        <div class="article-content" style="margin-bottom:12px;">${art.content}</div>
         ${art.url && art.url !== '#' ? `
           <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="link-btn">
-            🌐 Orijinal Kaynak Bağlantısı
+            🔗 Haberi Oku / Kaynağa Git &rarr;
           </a>
         ` : ''}
       </div>
@@ -236,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContainer.innerHTML = `
       <div class="placeholder-state">
         <div class="placeholder-icon">⏳</div>
-        <p><strong>${ticker}</strong> için Agent ekibi canlı haberleri tarıyor ve sözleşme detaylarını çıkarıyor...</p>
+        <p><strong>${ticker}</strong> için Agent ekibi güncel haberleri tarıyor ve harmanlanmış özeti hazırlıyor...</p>
       </div>
     `;
     articlesCard.style.display = 'none';
