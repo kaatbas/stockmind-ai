@@ -1,0 +1,251 @@
+/**
+ * StockMind AI - Dashboard Application Logic
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+  const tickerInput = document.getElementById('tickerInput');
+  const btnAnalyze = document.getElementById('btnAnalyze');
+  const watchlistChips = document.querySelectorAll('.chip-ticker');
+  
+  const cardRetriever = document.getElementById('cardAgentRetriever');
+  const cardAnalyst = document.getElementById('cardAgentAnalyst');
+  const cardSummary = document.getElementById('cardAgentSummary');
+  
+  const badgeRetriever = document.getElementById('badgeRetriever');
+  const badgeAnalyst = document.getElementById('badgeAnalyst');
+  const badgeSummary = document.getElementById('badgeSummary');
+
+  const terminalLog = document.getElementById('terminalLog');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const articlesCard = document.getElementById('articlesCard');
+  const articlesList = document.getElementById('articlesList');
+  const digestHeadline = document.getElementById('digestHeadline');
+  const badgeRisk = document.getElementById('badgeRisk');
+
+  // Watchlist Chip Click Handlers
+  watchlistChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const ticker = chip.getAttribute('data-ticker');
+      tickerInput.value = ticker;
+      runAnalysis(ticker);
+    });
+  });
+
+  // Search Button Click Handler
+  btnAnalyze.addEventListener('click', () => {
+    const ticker = tickerInput.value.trim();
+    if (ticker) {
+      runAnalysis(ticker);
+    }
+  });
+
+  // Enter Key Handler
+  tickerInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const ticker = tickerInput.value.trim();
+      if (ticker) runAnalysis(ticker);
+    }
+  });
+
+  /**
+   * Run Analysis Flow
+   */
+  async function runAnalysis(ticker) {
+    ticker = ticker.toUpperCase();
+    resetUIState(ticker);
+    appendTerminalLog("System", `🚀 '${ticker}' için Multi-Agent pipeline başlatıldı...`);
+
+    try {
+      // Agent 1 Visual State: Active
+      setAgentState(cardRetriever, badgeRetriever, "Çalışıyor...", true);
+      appendTerminalLog("News Retriever", `[🛰️] '${ticker}' için web kaynakları taranıyor...`);
+      await sleep(600);
+
+      // Fetch from API
+      const response = await fetch(`/api/analyze?ticker=${encodeURIComponent(ticker)}`);
+      if (!response.ok) throw new Error(`HTTP Hata: ${response.status}`);
+      const data = await response.json();
+
+      if (data.status !== "success") {
+        throw new Error(data.message || "Analiz yapılamadı.");
+      }
+
+      // Agent 1 Done
+      setAgentState(cardRetriever, badgeRetriever, "Tamamlandı ✓", false);
+      appendTerminalLog("News Retriever", `[🛰️] ${data.result.articles.length} adet haber ve KAP açıklaması bulundu.`);
+
+      // Agent 2 Active
+      setAgentState(cardAnalyst, badgeAnalyst, "Çalışıyor...", true);
+      appendTerminalLog("Financial Analyst", `[📊] Duygu metrikleri ve Boğa/Ayı dengesi hesaplanıyor...`);
+      await sleep(600);
+
+      const metrics = data.result.metrics;
+      setAgentState(cardAnalyst, badgeAnalyst, "Tamamlandı ✓", false);
+      appendTerminalLog("Financial Analyst", `[📊] Duygu Skoru: %${metrics.bullish_pct} Boğa — Risk: ${metrics.risk_level}`);
+
+      // Agent 3 Active
+      setAgentState(cardSummary, badgeSummary, "Yazıyor...", true);
+      appendTerminalLog("Executive Summary", `[✍️] Yönetici özeti ve eylem notları kaleme alınıyor...`);
+      await sleep(500);
+
+      setAgentState(cardSummary, badgeSummary, "Tamamlandı ✓", false);
+      appendTerminalLog("Executive Summary", `[✍️] Rapor başarıyla tamamlandı ve ekrana yansıtıldı.`);
+
+      // Render Final Results
+      renderResults(data.result);
+
+    } catch (err) {
+      appendTerminalLog("System Error", `❌ Hata oluştu: ${err.message}`);
+      resultsContainer.innerHTML = `
+        <div style="color:var(--bearish-color); padding:20px; text-align:center;">
+          ⚠️ Analiz sırasında bir sorun oluştu. Sunucunun (server.py) çalıştığından emin olun.<br>
+          <small style="color:var(--text-muted);">${err.message}</small>
+        </div>
+      `;
+      setAgentState(cardRetriever, badgeRetriever, "Hata", false);
+      setAgentState(cardAnalyst, badgeAnalyst, "Hata", false);
+      setAgentState(cardSummary, badgeSummary, "Hata", false);
+    }
+  }
+
+  /**
+   * Render Analysis Data to Dashboard
+   */
+  function renderResults(result) {
+    const m = result.metrics;
+    
+    digestHeadline.innerText = `📋 ${result.headline}`;
+    
+    // Risk Badge Styling
+    let riskBg = "rgba(16, 185, 129, 0.15)";
+    let riskColor = "var(--bullish-color)";
+    if (m.bearish_pct > 50) {
+      riskBg = "rgba(239, 68, 68, 0.15)";
+      riskColor = "var(--bearish-color)";
+    } else if (m.bullish_pct < 65) {
+      riskBg = "rgba(245, 158, 11, 0.15)";
+      riskColor = "var(--neutral-color)";
+    }
+    
+    badgeRisk.innerText = m.risk_level;
+    badgeRisk.style.background = riskBg;
+    badgeRisk.style.color = riskColor;
+    badgeRisk.style.border = `1px solid ${riskColor}`;
+
+    // Catalysts Badges HTML
+    const catalystsHTML = m.catalysts.map(c => 
+      `<span style="background:rgba(59, 130, 246, 0.15); border:1px solid rgba(59, 130, 246, 0.3); color:#93c5fd; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:500;">🏷️ ${c}</span>`
+    ).join(' ');
+
+    // Key Bullets HTML
+    const bulletsHTML = result.key_takeaways.map(b => `<li class="bullet-item">${b}</li>`).join('');
+
+    resultsContainer.innerHTML = `
+      <!-- Metrics Grid -->
+      <div class="metrics-row">
+        <div class="metric-box">
+          <div class="metric-label">Duygu Yönü (Sentiment)</div>
+          <div class="metric-value" style="color: ${m.bullish_pct >= 60 ? 'var(--bullish-color)' : 'var(--neutral-color)'};">
+            ${m.sentiment_label}
+          </div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Tespit Edilen Katalizörler</div>
+          <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+            ${catalystsHTML}
+          </div>
+        </div>
+      </div>
+
+      <!-- Sentiment Meter Bar -->
+      <div class="sentiment-bar-wrapper">
+        <div class="sentiment-labels">
+          <span style="color:var(--bullish-color)">🟢 %${m.bullish_pct} Boğa (Olumlu)</span>
+          <span style="color:var(--bearish-color)">🔴 %${m.bearish_pct} Ayı (Olumsuz)</span>
+        </div>
+        <div class="sentiment-bar-track">
+          <div class="sentiment-bar-fill" style="width: ${m.bullish_pct}%;"></div>
+        </div>
+      </div>
+
+      <!-- Key Takeaways List -->
+      <h3 style="font-size:15px; font-weight:600; margin-bottom:12px; color:#fff;">📌 Önemli Gelişmeler & Özet Maddeleri</h3>
+      <ul class="bullets-list">
+        ${bulletsHTML}
+      </ul>
+
+      <!-- Action Banner -->
+      <div class="action-banner">
+        <span style="font-size:20px;">💡</span>
+        <div>
+          <strong style="color:#fff; display:block; margin-bottom:4px;">Chief Editor Strateji Değerlendirmesi:</strong>
+          ${result.action_takeaway}
+        </div>
+      </div>
+    `;
+
+    // Articles Section
+    articlesCard.style.display = 'block';
+    articlesList.innerHTML = result.articles.map(art => `
+      <div class="article-card">
+        <div class="article-meta">
+          <span class="article-source">${art.source}</span>
+          <span>•</span>
+          <span>${art.time}</span>
+        </div>
+        <div class="article-title">${art.title}</div>
+        <div class="article-content">${art.content}</div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Helper Functions
+   */
+  function setAgentState(cardElem, badgeElem, text, isActive) {
+    if (isActive) {
+      cardElem.classList.add('active');
+    } else {
+      cardElem.classList.remove('active');
+    }
+    badgeElem.innerText = text;
+  }
+
+  function resetUIState(ticker) {
+    resultsContainer.innerHTML = `
+      <div class="placeholder-state">
+        <div class="placeholder-icon">⏳</div>
+        <p><strong>${ticker}</strong> için Agent ekibi çalıştırılıyor, lütfen bekleyin...</p>
+      </div>
+    `;
+    articlesCard.style.display = 'none';
+    
+    badgeRetriever.innerText = "Bekliyor";
+    badgeAnalyst.innerText = "Bekliyor";
+    badgeSummary.innerText = "Bekliyor";
+    
+    cardRetriever.classList.remove('active');
+    cardAnalyst.classList.remove('active');
+    cardSummary.classList.remove('active');
+  }
+
+  function appendTerminalLog(agent, msg) {
+    const timeStr = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    entry.innerHTML = `
+      <span class="log-time">[${timeStr}]</span>
+      <span class="log-agent">${agent}:</span>
+      <span class="log-msg">${msg}</span>
+    `;
+    terminalLog.appendChild(entry);
+    terminalLog.scrollTop = terminalLog.scrollHeight;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Initial trigger on load
+  runAnalysis('THYAO');
+});
