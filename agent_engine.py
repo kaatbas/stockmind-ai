@@ -204,23 +204,24 @@ class ExecutiveSummaryAgent:
     def generate_digest(self, ticker: str, articles: list, metrics: dict):
         print(f"[{self.name}] '{ticker}' için bütünleşik haber özeti metni oluşturuluyor...")
         
-        # Tüm haber içeriklerinin ve başlıklarının tek bir haber paragrafı halinde derlenmesi
-        news_elements = []
+        # Gerçek başlık ve metinlerden konu özetlerinin derlenmesi
+        news_summaries = []
         for art in articles:
-            t = art["title"]
-            c = art["content"]
-            news_elements.append(f"{t}: {c}")
-            
-        full_news_text = " ".join(news_elements)
+            clean_t = art['title']
+            if len(clean_t) > 10:
+                news_summaries.append(clean_t)
+                
+        primary_news = news_summaries[0] if len(news_summaries) > 0 else f"{ticker} için yeni haber ve KAP bildirimi açıklandı."
+        secondary_news = news_summaries[1] if len(news_summaries) > 1 else "Aracı kurumlar ve analistler hedef fiyat tahminlerini güncelledi."
+        tertiary_news = news_summaries[2] if len(news_summaries) > 2 else "Kurumsal fon hareketleri ve teknik göstergeler izleniyor."
         
-        # Haber tarzı bütünleşik metin sentezi
+        # Haber formatında bütünleşik metin özeti (Paragraf)
         narrative_summary = (
-            f"{ticker} hisse senedine ilişkin son dönemde yayınlanan Kamuyu Aydınlatma Platformu (KAP) bildirimi, "
-            f"şirket açıklamaları ve borsa haberleri incelendiğinde; "
-            f"şirketin güncel operasyonel faaliyetleri ve stratejik adımları öne çıkmaktadır. "
-            f"Yapılan bildirimlere ve basına yansıyan detaylara göre; {articles[0]['content'] if articles else 'şirket yeni yatırım ve operasyonel büyüme adımlarını sürdürmektedir.'} "
-            f"Ayrıca, finansal piyasalarda yer alan değerlendirmelerde {articles[1]['content'] if len(articles) > 1 else 'analistlerin dönemsel hedef fiyat ve kârlılık beklentileri yer almaktadır.'} "
-            f"Son haber akışı genelinde şirket yönetiminin anlaşma detayları, bilanço beklentileri ve kurumsal fon hareketleri dikkatle takip edilmektedir."
+            f"{ticker} hisse senedine ilişkin Kamuyu Aydınlatma Platformu (KAP) bildirimi, şirket açıklamaları ve piyasa haberleri incelendiğinde; "
+            f"şirket gündeminde öne çıkan ilk gelişme '{primary_news}' şeklinde basına yansımıştır. "
+            f"Bununla birlikte piyasalardaki son değerlendirmelerde '{secondary_news}' başlığı öne çıkarken, "
+            f"ayrıca kurumsal bazda '{tertiary_news}' kapsamında gelişmeler kaydedilmiştir. "
+            f"Toplanan tüm veriler, şirket yönetiminin güncel anlaşma süreçleri, kapasite yatırımları ve piyasa yapıcılarının hisse üzerindeki hareketlerinin dikkatle takip edildiğini göstermektedir."
         )
             
         b_pct = metrics["bullish_pct"]
@@ -240,6 +241,7 @@ class ExecutiveSummaryAgent:
             "articles": articles
         }
         return digest
+
 
 
 class StockMindOrchestrator:
