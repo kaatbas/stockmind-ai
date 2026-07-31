@@ -296,9 +296,15 @@ class ExecutiveSummaryAgent:
                         res_json = json.loads(resp.read().decode('utf-8'))
                         raw_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
                         
-                        # Eğer model düşünme adımları yazdıysa sadece son yanıt paragrafını al
-                        paragraphs = [p.strip() for p in raw_out.split('\n\n') if p.strip()]
-                        text_out = paragraphs[-1] if paragraphs else raw_out
+                        # Gemma düşünme adımları ve "Final Polish:" kısımlarını temizleme
+                        if "Final Polish:" in raw_out:
+                            raw_out = raw_out.split("Final Polish:")[-1].strip()
+                        elif "Final:" in raw_out:
+                            raw_out = raw_out.split("Final:")[-1].strip()
+                            
+                        lines = [line.strip() for line in raw_out.split('\n') if line.strip() and not line.strip().startswith('*') and not line.strip().startswith('-')]
+                        text_out = " ".join(lines) if lines else raw_out
+                        text_out = re.sub(r'^\*+\s*', '', text_out).strip()
                         
                         if text_out:
                             print(f"[{self.name}] Google {model_name} LLM Yanıtı Başarıyla Alındı ✓")
@@ -308,6 +314,7 @@ class ExecutiveSummaryAgent:
                     print(f"[{self.name}] Google {model_name} API Uyarısı ({he.code}): {err_body[:120]}")
                 except Exception as e:
                     print(f"[{self.name}] Gemini API Çağrı Hatası ({model_name}): {e}")
+
 
 
 
