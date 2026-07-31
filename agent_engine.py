@@ -235,11 +235,23 @@ class ExecutiveSummaryAgent:
     def _summarize_with_llm(self, ticker: str, articles_payload: str) -> str:
         """
         Google Gemini API veya LLM Servisi ile metin okuma ve özetleme.
-        Sistemde GEMINI_API_KEY varsa doğrudan Gemini 1.5 Flash API çağrılır.
+        Önce .env dosyasını ve çevre değişkenlerini (GEMINI_API_KEY) kontrol eder.
         """
         api_key = os.environ.get("GEMINI_API_KEY", "").strip()
         
-        if api_key:
+        # .env dosyasından okuma desteği
+        if not api_key and os.path.exists(".env"):
+            try:
+                with open(".env", "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("GEMINI_API_KEY="):
+                            api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                            break
+            except Exception as e:
+                print(f"[{self.name}] .env okuma uyarısı: {e}")
+        
+        if api_key and api_key != "buraya_google_gemini_api_keyinizi_yazin":
             try:
                 print(f"[{self.name}] Canlı Google Gemini 1.5 Flash API ile metin özetleniyor...")
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
@@ -269,6 +281,7 @@ class ExecutiveSummaryAgent:
                         return text_out
             except Exception as e:
                 print(f"[{self.name}] Gemini API Çağrı Hatası: {e}")
+
 
         # API Key yoksa veya çağrı düşerse: Akıllı Anlamsal Sentez Motoru
         print(f"[{self.name}] LLM Sentezleyici çalıştırılıyor (Tüm haber içerikleri analiz edilip birleştirildi)...")
