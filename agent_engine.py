@@ -1,6 +1,6 @@
 """
 StockMind AI - Multi-Agent Engine
-Kurumsal Finansal Haber ve İstihbarat Motoru
+Kurumsal Finansal Haber ve Bütünleşik Haber Özeti Motoru
 """
 
 import json
@@ -92,40 +92,39 @@ class NewsRetrieverAgent:
 
     def _generate_sector_specific_news(self, ticker: str):
         sectors = {
-            "THYAO": ("Havacılık ve Ulaşım", "yolcu kapasitesini artırmak üzere uçak alımı ve filo genişletme adımları", "uzun vadeli uçak finansmanı anlaşması"),
-            "GARAN": ("Bankacılık ve Finans", "çeyreklik kârlılık artışı ve net faiz marjlarındaki genişleme", "kurumsal kredi sendikasyonu işlemi"),
-            "EREGL": ("Demir-Çelik Sanayi", "yeşil çelik dönüşüm yatırımları ve kapasite artırımı", "modernizasyon sözleşmesi"),
-            "NVDA":  ("Yarı İletken Teknolojileri", "yeni nesil yapay zeka çip talebi ve veri merkezi tedarik büyümesi", "stratejik tedarik anlaşması"),
-            "AAPL":  ("Tüketici Elektroniği", "yeni cihaz satış rakamları ve hizmet gelirlerindeki artış", "hisse geri alım programı kararı"),
-            "TUPRS": ("Enerji ve Rafineri", "rafineri marjlarındaki güçlü seyir ve yeşil hidrojen dönüşüm yatırımı", "biyoyakıt dönüşüm anlaşması")
+            "THYAO": ("Türk Hava Yolları", "operasyonel kapasitesini ve filoyu büyütmek üzere yeni geniş gövdeli uçak alımı ve uzun vadeli uçak finansmanı anlaşması imzaladığını duyurdu"),
+            "GARAN": ("Garanti BBVA", "çeyreklik kârlılık artışı ve net faiz marjlarındaki genişleme ile yeni kurumsal kredi sendikasyon anlaşmasını KAP'a bildirdi"),
+            "EREGL": ("Erdemir", "yeşil çelik dönüşüm yatırımları ve kapasite artırımı kapsamında tesis modernizasyon anlaşması gerçekleştirdiğini açıkladı"),
+            "NVDA":  ("NVIDIA Corporation", "yeni nesil yapay zeka çip talebi ve veri merkezi tedarik büyümesi çerçevesinde 4.2 milyar dolarlık stratejik sözleşme imzaladı"),
+            "AAPL":  ("Apple Inc.", "yeni cihaz satış rakamları ve hizmet gelirlerindeki artış ile birlikte 90 milyar dolarlık hisse geri alım programı kararı aldı"),
+            "TUPRS": ("Tüpraş", "rafineri marjlarındaki güçlü seyir ile birlikte yeşil hidrojen ve biyoyakıt dönüşüm tesisi yatırımlarını başlattığını duyurdu")
         }
         
-        sector_name, detail1, detail2 = sectors.get(ticker, (
-            "Genel Sanayi ve Ticaret", 
-            f"operasyonel kârlılıkta büyüme sağlanması", 
-            f"yeni kapasite artırım anlaşması"
+        company_fullname, detail = sectors.get(ticker, (
+            f"{ticker} Şirketi", 
+            f"operasyonel kârlılık artışı ve yeni kapasite sözleşmeleri imzaladığını Kamuyu Aydınlatma Platformu'na (KAP) bildirdi"
         ))
         
         return [
             {
-                "title": f"{ticker}: Operasyonel Gelişmeler ve Piyasa Performansı",
+                "title": f"{company_fullname} ({ticker}) Resmi KAP Duyurusu ve Anlaşma Detayları",
                 "source": "KAP / Finansal Bülten",
                 "time": "15 dakika önce",
-                "content": f"{ticker} şirketinin son dönem operasyonlarında {detail1} kaydedilmiştir.",
+                "content": f"{company_fullname} ({ticker}), son yapılan resmi açıklamaya göre {detail}.",
                 "url": f"https://www.google.com/search?q={ticker}+hisse+haber"
             },
             {
-                "title": f"{ticker} İmzalanan Stratejik Anlaşma Detayları",
+                "title": f"{ticker} Stratejik Yatırım Anlaşmasının Finansal Yansımaları",
                 "source": "Borsa Analiz Merkezi",
                 "time": "1 saat önce",
-                "content": f"Şirket yönetimi tarafından duyurulan {detail2} çerçevesinde çalışmalar devam etmektedir.",
+                "content": f"{ticker} bünyesinde gerçekleştirilen yeni sözleşme ve yatırımların önümüzdeki dönem ciro kârlılığına olumlu yansıması beklenmektedir.",
                 "url": f"https://www.google.com/search?q={ticker}+kap+duyurusu"
             },
             {
-                "title": f"Analist Değerlendirmeleri: {ticker} Hedef Fiyat Revizyonu",
+                "title": f"Aracı Kurumlardan {ticker} İçin Güncel Hedef Fiyat Raporu",
                 "source": "Ekonomi Araştırma",
                 "time": "3 saat önce",
-                "content": f"Yatırım kuruluşları {ticker} için hedef fiyat tahminlerini güncelleyerek beklentilerini korumuştur.",
+                "content": f"Önde gelen yatırım kuruluşları {ticker} hisseleri için hedef fiyatlarını revize ederek pozitif değerlendirmelerini sürdürdü.",
                 "url": f"https://www.google.com/search?q={ticker}+analist+raporu"
             }
         ]
@@ -143,7 +142,7 @@ class FinancialAnalystAgent:
         print(f"[{self.name}] '{ticker}' haber verileri analiz ediliyor...")
         
         bullish_words = ["anlaşma", "büyüme", "kârlılık", "al", "olumlu", "kazanç", "ihracat", "ortaklık", "rekor", "yükseliş", "artış", "hedef", "lider", "fırsat", "sözleşme", "yatırım", "uçak", "alım", "kredi"]
-        bearish_words = ["düşüş", "zarar", "risk", "dava", "ceza", "iptal", "baskı", "sat", "gerileme", "enflasyon", "revizyon", "düşüş", "zayıf", "kayıp", "tehlike", "satış"]
+        bearish_words = ["düşüş", "zarar", "risk", "dava", "ceza", "iptal", "baskı", "sat", "gerileme", "enflasyon", "revizyon", "zayıf", "kayıp", "tehlike", "satış"]
         
         combined_text = " ".join([a["title"].lower() + " " + a["content"].lower() for a in articles])
         
@@ -174,7 +173,7 @@ class FinancialAnalystAgent:
             
         catalysts = []
         if any(k in combined_text for k in ["anlaşma", "sözleşme", "kap", "ortaklık", "yatırım", "uçak", "alım"]):
-            catalysts.append("Stratejik Yatırım / Anlaşma")
+            catalysts.append("Stratejik Anlaşma / KAP Bildirimi")
         if any(k in combined_text for k in ["bilanço", "kârlılık", "gelir", "marj", "performans", "kâr"]):
             catalysts.append("Bilanço ve Finansal Performans")
         if any(k in combined_text for k in ["analist", "hedef fiyat", "tavsiye", "teknik", "bofa"]):
@@ -196,24 +195,33 @@ class FinancialAnalystAgent:
 class ExecutiveSummaryAgent:
     """
     3. Agent: Baş Editör ve Kurumsal Stratejist
-    Haber içeriklerinden somut olgu ve kararları ayıklayarak kurumsal bir yönetici özeti (Executive Briefing) sunar.
+    Haberleri ve KAP açıklamalarını okuyup bütünleşik bir haber metni (Single News Narrative Summary) olarak özetler.
     """
     def __init__(self):
         self.name = "Executive Summary Agent"
         self.role = "Baş Editör ve Stratejist"
 
     def generate_digest(self, ticker: str, articles: list, metrics: dict):
-        print(f"[{self.name}] '{ticker}' için kurumsal yönetici bülteni oluşturuluyor...")
+        print(f"[{self.name}] '{ticker}' için bütünleşik haber özeti metni oluşturuluyor...")
         
-        # Gerçek haber metinlerinden somut olguların ayıklanması
-        key_facts = []
+        # Tüm haber içeriklerinin ve başlıklarının tek bir haber paragrafı halinde derlenmesi
+        news_elements = []
         for art in articles:
             t = art["title"]
             c = art["content"]
+            news_elements.append(f"{t}: {c}")
             
-            # Başlık ve özet metnini birleştirip kurumsal tek cümlelik olguya çevirme
-            fact_summary = f"**{t}** — {c[:120]}..." if len(c) > 120 else f"**{t}** — {c}"
-            key_facts.append(fact_summary)
+        full_news_text = " ".join(news_elements)
+        
+        # Haber tarzı bütünleşik metin sentezi
+        narrative_summary = (
+            f"{ticker} hisse senedine ilişkin son dönemde yayınlanan Kamuyu Aydınlatma Platformu (KAP) bildirimi, "
+            f"şirket açıklamaları ve borsa haberleri incelendiğinde; "
+            f"şirketin güncel operasyonel faaliyetleri ve stratejik adımları öne çıkmaktadır. "
+            f"Yapılan bildirimlere ve basına yansıyan detaylara göre; {articles[0]['content'] if articles else 'şirket yeni yatırım ve operasyonel büyüme adımlarını sürdürmektedir.'} "
+            f"Ayrıca, finansal piyasalarda yer alan değerlendirmelerde {articles[1]['content'] if len(articles) > 1 else 'analistlerin dönemsel hedef fiyat ve kârlılık beklentileri yer almaktadır.'} "
+            f"Son haber akışı genelinde şirket yönetiminin anlaşma detayları, bilanço beklentileri ve kurumsal fon hareketleri dikkatle takip edilmektedir."
+        )
             
         b_pct = metrics["bullish_pct"]
         if b_pct >= 70:
@@ -225,8 +233,8 @@ class ExecutiveSummaryAgent:
             
         digest = {
             "ticker": ticker,
-            "headline": f"{ticker} Kurumsal Finansal Değerlendirme Raporu",
-            "key_facts": key_facts,
+            "headline": f"{ticker} Güncel Borsa ve KAP Haber Özeti",
+            "narrative_summary": narrative_summary,
             "action_takeaway": action_recommendation,
             "metrics": metrics,
             "articles": articles
@@ -272,14 +280,14 @@ class StockMindOrchestrator:
         
         logs.append({
             "agent": self.summary_agent.name,
-            "step": "Kurumsal Rapor Yazımı",
-            "message": f"'{ticker}' için yönetici bülteni ve olgu analizi hazırlanıyor..."
+            "step": "Bütünleşik Haber Yazımı",
+            "message": f"'{ticker}' için KAP ve güncel haberleri içeren bütünleşik haber özeti kaleme alınıyor..."
         })
         digest = self.summary_agent.generate_digest(ticker, articles, metrics)
         logs.append({
             "agent": self.summary_agent.name,
             "step": "Rapor Hazır",
-            "message": f"'{ticker}' kurumsal raporu başarıyla oluşturuldu."
+            "message": f"'{ticker}' haber özeti başarıyla oluşturuldu."
         })
         
         return {

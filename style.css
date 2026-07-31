@@ -346,25 +346,23 @@ header {
   transition: width 0.6s ease;
 }
 
-/* Fact Summary Bullets */
-.bullets-list-facts {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* Narrative News Summary Box */
+.news-narrative-box {
+  background: rgba(11, 15, 25, 0.7);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-blue);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
   margin-bottom: 20px;
 }
 
-.bullet-item-fact {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-color);
-  border-left: 3px solid var(--accent-blue);
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  color: var(--text-main);
-  line-height: 1.5;
+.narrative-text {
+  font-size: 14px;
+  color: #e5e7eb;
+  line-height: 1.7;
+  letter-spacing: 0.2px;
 }
+
 
 .action-banner {
   background: rgba(59, 130, 246, 0.1);

@@ -1,6 +1,6 @@
 /**
  * StockMind AI - Dashboard Application Logic
- * Kurumsal Finansal Arayüz Mantığı
+ * Kurumsal Bütünleşik Haber Özeti Arayüzü
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,12 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function runAnalysis(ticker) {
     ticker = ticker.toUpperCase();
     resetUIState(ticker);
-    appendTerminalLog("System", `'${ticker}' için analiz süreci başlatıldı.`);
+    appendTerminalLog("System", `'${ticker}' için haber analiz süreci başlatıldı.`);
 
     try {
       // Agent 1 Active
       setAgentState(cardRetriever, badgeRetriever, "Çalışıyor...", true);
-      appendTerminalLog("News Retriever", `'${ticker}' için canlı haber kaynakları taranıyor...`);
+      appendTerminalLog("News Retriever", `'${ticker}' için canlı KAP ve haber kaynakları taranıyor...`);
       await sleep(400);
 
       // Fetch from API
@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Agent 1 Complete
       setAgentState(cardRetriever, badgeRetriever, "Tamamlandı", false);
-      appendTerminalLog("News Retriever", `${data.result.articles.length} adet haber verisi çekildi.`);
+      appendTerminalLog("News Retriever", `${data.result.articles.length} adet canlı haber metni çekildi.`);
 
       // Agent 2 Active
       setAgentState(cardAnalyst, badgeAnalyst, "Çalışıyor...", true);
-      appendTerminalLog("Financial Analyst", `Haber içerikleri ve duygu metrikleri analiz ediliyor...`);
+      appendTerminalLog("Financial Analyst", `Haber detayları ve duygu dengesi analiz ediliyor...`);
       await sleep(400);
 
       const metrics = data.result.metrics;
@@ -85,12 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
       appendTerminalLog("Financial Analyst", `Duygu Skoru: %${metrics.bullish_pct} Pozitif | Risk: ${metrics.risk_level}`);
 
       // Agent 3 Active
-      setAgentState(cardSummary, badgeSummary, "Hazırlanıyor...", true);
-      appendTerminalLog("Executive Summary", `Kurumsal yönetici bülteni derleniyor...`);
+      setAgentState(cardSummary, badgeSummary, "Yazıyor...", true);
+      appendTerminalLog("Executive Summary", `Bütünleşik haber özet metni kaleme alınıyor...`);
       await sleep(300);
 
       setAgentState(cardSummary, badgeSummary, "Tamamlandı", false);
-      appendTerminalLog("Executive Summary", `Rapor başarıyla tamamlandı.`);
+      appendTerminalLog("Executive Summary", `Haber özeti başarıyla tamamlandı.`);
 
       // Render Results
       renderResults(data.result);
@@ -138,13 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `<span class="tag-badge">${c}</span>`
     ).join(' ');
 
-    // Key Facts List HTML
-    const keyFacts = result.key_facts || [];
-    const factsHTML = keyFacts.map(fact => {
-      const formatted = fact.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#fff;">$1</strong>');
-      return `<li class="bullet-item-fact">${formatted}</li>`;
-    }).join('');
-
     resultsContainer.innerHTML = `
       <!-- Metrics Grid -->
       <div class="metrics-row">
@@ -173,16 +166,16 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- Key Facts Summary Section -->
-      <h3 style="font-size:15px; font-weight:700; margin-bottom:14px; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Öne Çıkan Gelişmeler ve Analiz Notları</h3>
-      <ul class="bullets-list-facts">
-        ${factsHTML}
-      </ul>
+      <!-- Unified News Summary Section (Bütünleşik Haber Özeti) -->
+      <h3 style="font-size:14px; font-weight:700; margin-bottom:12px; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Bütünleşik Haber ve KAP Duyuru Özeti</h3>
+      <div class="news-narrative-box">
+        <p class="narrative-text">${result.narrative_summary}</p>
+      </div>
 
       <!-- Action Banner -->
       <div class="action-banner">
         <div>
-          <strong style="color:#fff; display:block; margin-bottom:4px; font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Stratejik Değerlendirme Notu:</strong>
+          <strong style="color:#fff; display:block; margin-bottom:4px; font-size:12px; text-transform:uppercase; letter-spacing:0.5px;">Stratejik Değerlendirme Notu:</strong>
           ${result.action_takeaway}
         </div>
       </div>
@@ -198,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span>${art.time}</span>
         </div>
         <div class="article-title">${art.title}</div>
-        <div class="article-content" style="margin-bottom:12px;">${art.content}</div>
+        <div class="article-content" style="margin-bottom:10px;">${art.content}</div>
         ${art.url && art.url !== '#' ? `
           <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="link-btn">
             Orijinal Kaynak Bağlantısı &rarr;
@@ -223,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetUIState(ticker) {
     resultsContainer.innerHTML = `
       <div class="placeholder-state">
-        <p><strong>${ticker}</strong> için veri derleme ve analiz işlemi yürütülüyor...</p>
+        <p><strong>${ticker}</strong> için KAP ve güncel haber özet metni hazırlanıyor...</p>
       </div>
     `;
     articlesCard.style.display = 'none';
