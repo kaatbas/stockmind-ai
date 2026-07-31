@@ -269,7 +269,7 @@ class ExecutiveSummaryAgent:
                 print(f"[{self.name}] .env okuma uyarısı: {e}")
         
         if api_key and api_key != "buraya_google_gemini_api_keyinizi_yazin":
-            for model_name in ["gemini-2.0-flash", "gemini-2.0-flash-lite"]:
+            for model_name in ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemma-4-26b-a4b-it"]:
                 try:
                     print(f"[{self.name}] Canlı Google {model_name} API ile metin özetleniyor...")
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
@@ -292,17 +292,18 @@ class ExecutiveSummaryAgent:
                         method='POST'
                     )
                     
-                    with urllib.request.urlopen(req, timeout=8) as resp:
+                    with urllib.request.urlopen(req, timeout=10) as resp:
                         res_json = json.loads(resp.read().decode('utf-8'))
                         text_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
                         if text_out:
-                            print(f"[{self.name}] Gemini LLM Yanıtı Başarıyla Alındı ✓")
+                            print(f"[{self.name}] Google {model_name} LLM Yanıtı Başarıyla Alındı ✓")
                             return text_out
                 except urllib.error.HTTPError as he:
                     err_body = he.read().decode('utf-8', errors='ignore')
-                    print(f"[{self.name}] Gemini {model_name} API Uyarısı ({he.code}): {err_body[:150]}")
+                    print(f"[{self.name}] Google {model_name} API Uyarısı ({he.code}): {err_body[:120]}")
                 except Exception as e:
-                    print(f"[{self.name}] Gemini API Çağrı Hatası: {e}")
+                    print(f"[{self.name}] Gemini API Çağrı Hatası ({model_name}): {e}")
+
 
 
 
