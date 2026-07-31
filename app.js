@@ -138,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
       `<span class="tag-badge">${c}</span>`
     ).join(' ');
 
-    const kapUrl = result.kap_url || `https://www.kap.org.tr/tr/bist-sirketler/${result.ticker}`;
+    const kapUrl = result.kap_url || `https://getborsa.com/hisse/${result.ticker.toLowerCase()}/kap/index.html`;
+
 
     resultsContainer.innerHTML = `
       <!-- KAP Fast Action Bar -->

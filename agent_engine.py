@@ -41,7 +41,9 @@ class NewsRetrieverAgent:
 
     def _fetch_live_rss_news(self, ticker: str):
         articles = []
-        latest_kap_url = f"https://www.kap.org.tr/tr/bist-sirketler/{ticker}"
+        ticker_lower = ticker.lower()
+        latest_kap_url = f"https://getborsa.com/hisse/{ticker_lower}/kap/index.html"
+
         
         queries = [
             f"{ticker} BIST KAP duyurusu",
@@ -114,7 +116,8 @@ class NewsRetrieverAgent:
             f"operasyonel büyüme ve yeni kapasite sözleşmeleri imzalamıştır"
         ))
         
-        kap_url = f"https://www.google.com/search?q={ticker}+KAP+bildirimi+son+dakika"
+        kap_url = f"https://getborsa.com/hisse/{ticker.lower()}/kap/index.html"
+
         
         return [
             {
