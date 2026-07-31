@@ -55,16 +55,22 @@ class StockMindRequestHandler(http.server.SimpleHTTPRequestHandler):
                 
                 json_bytes = json.dumps(result_data, ensure_ascii=False).encode('utf-8')
                 self.wfile.write(json_bytes)
+            except (ConnectionAbortedError, BrokenPipeError):
+                pass
             except Exception as e:
                 print(f"[Server Error] API Hatası ({ticker}): {e}")
                 traceback.print_exc()
                 
-                self.send_response(500)
-                self.send_header('Content-type', 'application/json; charset=utf-8')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                err_bytes = json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False).encode('utf-8')
-                self.wfile.write(err_bytes)
+                try:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json; charset=utf-8')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    err_bytes = json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False).encode('utf-8')
+                    self.wfile.write(err_bytes)
+                except Exception:
+                    pass
+
             return
 
         # Statik Dosya Servisi (index.html, style.css, app.js vb.)
