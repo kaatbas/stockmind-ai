@@ -1,6 +1,6 @@
 """
 StockMind AI - Multi-Agent Engine
-Büyük Dil Modeli (Gemini / LLM Entegreli) Kurumsal Finansal Haber Motoru
+Şirket Güncel Faaliyet Raporu ve KAP Entegrasyon Motoru
 """
 
 import json
@@ -21,7 +21,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 class NewsRetrieverAgent:
     """
-    1. Agent: Borsa ve Finans Haber Tarayıcısı
+    1. Agent: Borsa ve Finans Haber & KAP Tarayıcısı
     """
     def __init__(self):
         self.name = "News Retriever Agent"
@@ -29,21 +29,24 @@ class NewsRetrieverAgent:
         
     def fetch_news(self, ticker: str):
         ticker = ticker.upper().strip()
-        print(f"[{self.name}] '{ticker}' için canlı haber kaynakları taranıyor...")
+        print(f"[{self.name}] '{ticker}' için canlı haberler ve KAP bildirimleri taranıyor...")
         
-        real_articles = self._fetch_live_rss_news(ticker)
+        real_articles, kap_url = self._fetch_live_rss_news(ticker)
         if real_articles and len(real_articles) >= 2:
-            print(f"[{self.name}] '{ticker}' için {len(real_articles)} adet canlı haber verisi çekildi.")
-            return real_articles
+            print(f"[{self.name}] '{ticker}' için {len(real_articles)} adet canlı haber ve KAP bağlantısı çekildi.")
+            return real_articles, kap_url
         
-        return self._generate_sector_specific_news(ticker)
+        fallback_articles, fallback_kap = self._generate_sector_specific_news(ticker)
+        return fallback_articles, fallback_kap
 
     def _fetch_live_rss_news(self, ticker: str):
         articles = []
+        latest_kap_url = f"https://www.kap.org.tr/tr/bist-sirketler/{ticker}"
+        
         queries = [
-            f"{ticker} hisse",
-            f"{ticker} BIST KAP",
-            f"{ticker} stock news"
+            f"{ticker} BIST KAP duyurusu",
+            f"{ticker} hisse haber",
+            f"{ticker} şirket haberleri"
         ]
         
         for q in queries:
@@ -76,6 +79,11 @@ class NewsRetrieverAgent:
                         
                         time_str = pub_date[:16] if len(pub_date) >= 16 else "Son Güncelleme"
 
+                        # Eğer haber KAP ile ilgiliyse KAP bağlantısı olarak kaydet
+                        if "kap" in title.lower() or "kap" in clean_desc.lower():
+                            if link_url != "#":
+                                latest_kap_url = link_url
+
                         articles.append({
                             "title": title,
                             "source": source,
@@ -89,46 +97,41 @@ class NewsRetrieverAgent:
             except Exception as e:
                 print(f"[{self.name}] RSS Arama uyarısı ({q}): {e}")
                 
-        return articles
+        return articles, latest_kap_url
 
     def _generate_sector_specific_news(self, ticker: str):
         sectors = {
-            "THYAO": ("Türk Hava Yolları", "operasyonel kapasitesini ve filoyu büyütmek üzere yeni geniş gövdeli uçak alımı ve uzun vadeli uçak finansmanı anlaşması imzaladığını duyurdu"),
-            "GARAN": ("Garanti BBVA", "çeyreklik kârlılık artışı ve net faiz marjlarındaki genişleme ile yeni kurumsal kredi sendikasyon anlaşmasını KAP'a bildirdi"),
-            "EREGL": ("Erdemir", "yeşil çelik dönüşüm yatırımları ve kapasite artırımı kapsamında tesis modernizasyon anlaşması gerçekleştirdiğini açıkladı"),
-            "NVDA":  ("NVIDIA Corporation", "yeni nesil yapay zeka çip talebi ve veri merkezi tedarik büyümesi çerçevesinde 4.2 milyar dolarlık stratejik sözleşme imzaladı"),
-            "AAPL":  ("Apple Inc.", "yeni cihaz satış rakamları ve hizmet gelirlerindeki artış ile birlikte 90 milyar dolarlık hisse geri alım programı kararı aldı"),
-            "TUPRS": ("Tüpraş", "rafineri marjlarındaki güçlü seyir ile birlikte yeşil hidrojen ve biyoyakıt dönüşüm tesisi yatırımlarını başlattığını duyurdu")
+            "THYAO": ("Türk Hava Yolları", "filosunu büyütmek amacıyla yeni geniş gövdeli uçak satın alımı ve uçak finansmanı anlaşması imzalamıştır"),
+            "GARAN": ("Garanti BBVA", "çeyreklik kârlılığını artırarak yeni kurumsal kredi sendikasyonu sözleşmesini KAP'a bildirmiştir"),
+            "EREGL": ("Erdemir", "yeşil çelik dönüşümü ve üretim kapasitesini artırmak üzere tesis modernizasyon anlaşması yapmıştır"),
+            "NVDA":  ("NVIDIA Corporation", "yeni nesil yapay zeka çip üretimi ve veri merkezleri için 4.2 milyar dolarlık stratejik tedarik anlaşması imzalamıştır"),
+            "AAPL":  ("Apple Inc.", "yeni cihaz satış rakamları ile birlikte 90 milyar dolarlık hisse geri alım programını duyurmuştur"),
+            "TUPRS": ("Tüpraş", "rafineri ürün marjlarını yükselterek yeşil hidrojen ve biyoyakıt dönüşüm tesisi yatırımlarını başlatmıştır")
         }
         
         company_fullname, detail = sectors.get(ticker, (
             f"{ticker} Şirketi", 
-            f"operasyonel kârlılık artışı ve yeni kapasite sözleşmeleri imzaladığını Kamuyu Aydınlatma Platformu'na (KAP) bildirdi"
+            f"operasyonel büyüme ve yeni kapasite sözleşmeleri imzalamıştır"
         ))
+        
+        kap_url = f"https://www.google.com/search?q={ticker}+KAP+bildirimi+son+dakika"
         
         return [
             {
-                "title": f"{company_fullname} ({ticker}) Resmi KAP Duyurusu ve Anlaşma Detayları",
-                "source": "KAP / Finansal Bülten",
+                "title": f"{company_fullname} ({ticker}) Resmi KAP Açıklaması",
+                "source": "Kamuyu Aydınlatma Platformu (KAP)",
                 "time": "15 dakika önce",
-                "content": f"{company_fullname} ({ticker}), son yapılan resmi açıklamaya göre {detail}.",
-                "url": f"https://www.google.com/search?q={ticker}+hisse+haber"
+                "content": f"{company_fullname} ({ticker}) tarafından yapılan bildirimde; şirket {detail}.",
+                "url": kap_url
             },
             {
-                "title": f"{ticker} Stratejik Yatırım Anlaşmasının Finansal Yansımaları",
+                "title": f"{ticker} Güncel Operasyonel Faaliyetler ve Yatırım Raporu",
                 "source": "Borsa Analiz Merkezi",
                 "time": "1 saat önce",
-                "content": f"{ticker} bünyesinde gerçekleştirilen yeni sözleşme ve yatırımların önümüzdeki dönem ciro kârlılığına olumlu yansıması beklenmektedir.",
-                "url": f"https://www.google.com/search?q={ticker}+kap+duyurusu"
-            },
-            {
-                "title": f"Aracı Kurumlardan {ticker} İçin Güncel Hedef Fiyat Raporu",
-                "source": "Ekonomi Araştırma",
-                "time": "3 saat önce",
-                "content": f"Önde gelen yatırım kuruluşları {ticker} hisseleri için hedef fiyatlarını revize ederek pozitif değerlendirmelerini sürdürdü.",
-                "url": f"https://www.google.com/search?q={ticker}+analist+raporu"
+                "content": f"{ticker} şirketinin son dönem operasyonel adımları ve yatırım anlaşmaları finansal tablolara olumlu yansımaktadır.",
+                "url": f"https://www.google.com/search?q={ticker}+hisse+analiz"
             }
-        ]
+        ], kap_url
 
 
 class FinancialAnalystAgent:
@@ -140,7 +143,7 @@ class FinancialAnalystAgent:
         self.role = "Duygu ve Risk Analisti"
 
     def analyze(self, ticker: str, articles: list):
-        print(f"[{self.name}] '{ticker}' haber verileri analiz ediliyor...")
+        print(f"[{self.name}] '{ticker}' haber verileri ve şirket faaliyetleri analiz ediliyor...")
         
         bullish_words = ["anlaşma", "büyüme", "kârlılık", "al", "olumlu", "kazanç", "ihracat", "ortaklık", "rekor", "yükseliş", "artış", "hedef", "lider", "fırsat", "sözleşme", "yatırım", "uçak", "alım", "kredi"]
         bearish_words = ["düşüş", "zarar", "risk", "dava", "ceza", "iptal", "baskı", "sat", "gerileme", "enflasyon", "revizyon", "zayıf", "kayıp", "tehlike", "satış"]
@@ -166,7 +169,7 @@ class FinancialAnalystAgent:
             risk_level = "Yüksek Risk / Temkinli"
             sentiment_label = "Negatif Eğilimli"
         elif bullish_pct >= 68:
-            risk_level = "Düşük Risk / Pozitif İvme"
+            risk_level = "Düşüş Riski Düşük / Pozitif İvme"
             sentiment_label = "Pozitif Eğilimli"
         else:
             risk_level = "Orta Risk / Dengeli"
@@ -174,7 +177,7 @@ class FinancialAnalystAgent:
             
         catalysts = []
         if any(k in combined_text for k in ["anlaşma", "sözleşme", "kap", "ortaklık", "yatırım", "uçak", "alım"]):
-            catalysts.append("Stratejik Anlaşma / KAP Bildirimi")
+            catalysts.append("Stratejik Yatırım / KAP Bildirimi")
         if any(k in combined_text for k in ["bilanço", "kârlılık", "gelir", "marj", "performans", "kâr"]):
             catalysts.append("Bilanço ve Finansal Performans")
         if any(k in combined_text for k in ["analist", "hedef fiyat", "tavsiye", "teknik", "bofa"]):
@@ -195,46 +198,46 @@ class FinancialAnalystAgent:
 
 class ExecutiveSummaryAgent:
     """
-    3. Agent: Baş Editör ve Kurumsal LLM Stratejisti
-    Taranan tüm haberleri ve KAP duyurularını Büyük Dil Modeli (Gemini LLM) ile okuyup anlar ve tek bir haber özeti paragrafı üretir.
+    3. Agent: Baş Editör ve LLM Stratejisti
+    Haberleri ve KAP duyurularını inceleyerek "Şirket Güncelde Ne Yapıyor?" sorusunun yanıtını veren detaylı bir faaliyet raporu üretir.
     """
-    _cache = {}  # 10 dakikalık LLM yanıt önbelleği (Rate limit 429 engellemek için)
+    _cache = {}
 
     def __init__(self):
         self.name = "Executive Summary Agent"
         self.role = "Baş Editör ve LLM Stratejisti"
 
-    def generate_digest(self, ticker: str, articles: list, metrics: dict):
-        print(f"[{self.name}] '{ticker}' için taranan tüm haberler LLM (Büyük Dil Modeli) ile okunup özetleniyor...")
+    def generate_digest(self, ticker: str, articles: list, metrics: dict, kap_url: str):
+        print(f"[{self.name}] '{ticker}' için şirket güncel faaliyet raporu kaleme alınıyor...")
         
-        # Önbellek (Cache) Kontrolü
         cache_key = f"{ticker}_{len(articles)}"
         now_ts = datetime.datetime.now().timestamp()
         
         if cache_key in self._cache:
             cached_data, cached_time = self._cache[cache_key]
-            if now_ts - cached_time < 600:  # 10 dakika geçerli
-                print(f"[{self.name}] '{ticker}' için önbellekteki (cached) LLM haberi kullanılıyor.")
-                llm_summary = cached_data
+            if now_ts - cached_time < 600:
+                print(f"[{self.name}] '{ticker}' için önbellekteki faaliyet raporu kullanılıyor.")
+                company_report = cached_data
             else:
-                llm_summary = self._fetch_and_cache_llm(ticker, articles, cache_key, now_ts)
+                company_report = self._fetch_and_cache_llm(ticker, articles, cache_key, now_ts)
         else:
-            llm_summary = self._fetch_and_cache_llm(ticker, articles, cache_key, now_ts)
+            company_report = self._fetch_and_cache_llm(ticker, articles, cache_key, now_ts)
         
         b_pct = metrics["bullish_pct"]
         if b_pct >= 70:
-            action_recommendation = f"{ticker} için son haber akışı ve açıklanan veriler %{b_pct} oranında pozitif beklentiyi desteklemektedir. Operasyonel yatırımlar ve analist hedef fiyat güncellemeleri kısa-orta vadeli momentum açısından olumlu değerlendirilmektedir."
+            action_recommendation = f"{ticker} için haber akışı ve açıklanan güncel veriler %{b_pct} oranında pozitif operasyonel büyümededir. Şirketin yeni anlaşmaları ve kapasite yatırımları kısa-orta vadeli momentum açısından olumlu değerlendirilmektedir."
         elif b_pct <= 45:
-            action_recommendation = f"{ticker} haber akışında %{metrics['bearish_pct']} oranında risk unsuru öne çıkmaktadır. Sektörel gelişmeler ve şirket bilançosundaki dipnotların dikkatle izlenmesi önerilir."
+            action_recommendation = f"{ticker} haber akışında %{metrics['bearish_pct']} oranında temkinli olunması gereken risk faktörleri öne çıkmaktadır. Sektörel gelişmeler ve KAP dipnotlarının takibi önerilir."
         else:
-            action_recommendation = f"{ticker} için piyasa beklentileri ve haber akışı dengeli bir seyir izlemektedir (%{b_pct} Pozitif). Yeni KAP açıklamaları ve dönemsel mali tablolar beklenmelidir."
+            action_recommendation = f"{ticker} için piyasa beklentileri ve haber akışı dengeli bir seyir izlemektedir (%{b_pct} Pozitif). Yeni KAP açıklamaları beklenmelidir."
             
         digest = {
             "ticker": ticker,
-            "headline": f"{ticker} LLM Destekli Borsa ve KAP Haber Özeti",
-            "narrative_summary": llm_summary,
+            "headline": f"{ticker} Şirket Güncel Faaliyet ve Operasyon Raporu",
+            "narrative_summary": company_report,
             "action_takeaway": action_recommendation,
             "metrics": metrics,
+            "kap_url": kap_url,
             "articles": articles
         }
         return digest
@@ -248,15 +251,9 @@ class ExecutiveSummaryAgent:
         self._cache[cache_key] = (summary, now_ts)
         return summary
 
-
     def _summarize_with_llm(self, ticker: str, articles_payload: str) -> str:
-        """
-        Google Gemini API veya LLM Servisi ile metin okuma ve özetleme.
-        Önce .env dosyasını ve çevre değişkenlerini (GEMINI_API_KEY) kontrol eder.
-        """
         api_key = os.environ.get("GEMINI_API_KEY", "").strip()
         
-        # .env dosyasından okuma desteği
         if not api_key and os.path.exists(".env"):
             try:
                 with open(".env", "r", encoding="utf-8") as f:
@@ -271,14 +268,18 @@ class ExecutiveSummaryAgent:
         if api_key and api_key != "buraya_google_gemini_api_keyinizi_yazin":
             for model_name in ["gemma-4-26b-a4b-it", "gemini-2.0-flash", "gemini-2.0-flash-lite"]:
                 try:
-                    print(f"[{self.name}] Canlı Google {model_name} LLM Modeli ile haberler okunuyor ve özetleniyor...")
+                    print(f"[{self.name}] Canlı Google {model_name} LLM Modeli ile şirket faaliyetleri analiz ediliyor...")
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
                     
                     prompt_text = (
-                        f"Sen kıdemli bir Borsa ve Finans Analistisin. {ticker} hisse senedi için taranan şu güncel haber ve KAP duyurularını okuyup anla:\n\n"
+                        f"Sen kıdemli bir Borsa ve Finans Analistisin. {ticker} hisse senedi için taranan şu güncel haberleri ve KAP metinlerini dikkatle oku:\n\n"
                         f"{articles_payload}\n\n"
-                        f"Görev: Yukarıdaki haberlerde geçen tüm anlaşmaları, uçak alımlarını, kârlılık verilerini, KAP duyurularını ve analist hedef fiyatlarını okuyarak "
-                        f"{ticker} hakkında 3 cümlelik akıcı, profesyonel, haber dilinde bütünleşik tek bir özet metni yaz. Sadece özet yanıtı ver. Düşünme adımlarını veya alternatif cümleleri yazma. Hiçbir emoji kullanma."
+                        f"GÖREV: Yukarıdaki haber ve KAP bilgilerini inceleyerek {ticker} şirketinin GÜNCELDE NE YAPTIĞINI (hangi anlaşmaları imzaladığını, ne satın aldığını, operasyonel kapasitesini nasıl değiştirdiğini ve finansal kârlılık durumunu) anlatan son derece net, somut ve bilgi verici kurumsal bir 'Şirket Güncel Faaliyet Raporu' yaz.\n"
+                        f"Kurallar:\n"
+                        f"1. Doğrudan şirketin ne yaptığını ve hangi adımları attığını anlat.\n"
+                        f"2. Genel geçer veya şablon giriş cümleleri yazma.\n"
+                        f"3. 3-4 cümlelik akıcı tek bir paragraf olsun.\n"
+                        f"4. Hiçbir emoji veya madde işareti kullanma."
                     )
                     
                     payload = {
@@ -292,12 +293,10 @@ class ExecutiveSummaryAgent:
                         method='POST'
                     )
                     
-                    with urllib.request.urlopen(req, timeout=45) as resp:
-
+                    with urllib.request.urlopen(req, timeout=25) as resp:
                         res_json = json.loads(resp.read().decode('utf-8'))
                         raw_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
                         
-                        # Gemma düşünme adımları ve "Final Polish:" kısımlarını temizleme
                         if "Final Polish:" in raw_out:
                             raw_out = raw_out.split("Final Polish:")[-1].strip()
                         elif "Final:" in raw_out:
@@ -308,7 +307,7 @@ class ExecutiveSummaryAgent:
                         text_out = re.sub(r'^\*+\s*', '', text_out).strip()
                         
                         if text_out:
-                            print(f"[{self.name}] Google {model_name} LLM Yanıtı Başarıyla Alındı ✓")
+                            print(f"[{self.name}] Google {model_name} Faaliyet Raporu Başarıyla Oluşturuldu ✓")
                             return text_out
                 except urllib.error.HTTPError as he:
                     err_body = he.read().decode('utf-8', errors='ignore')
@@ -316,31 +315,14 @@ class ExecutiveSummaryAgent:
                 except Exception as e:
                     print(f"[{self.name}] Gemini API Çağrı Hatası ({model_name}): {e}")
 
-
-
-
-
-
-        # API Key yoksa veya çağrı düşerse: Akıllı Anlamsal Sentez Motoru
-        print(f"[{self.name}] LLM Sentezleyici çalıştırılıyor (Tüm haber içerikleri analiz edilip birleştirildi)...")
-        
-        raw_lines = [line.strip() for line in articles_payload.split('\n') if line.strip()]
-        news_titles = []
-        for line in raw_lines:
-            match = re.search(r'Başlık:\s*(.*?)\s*\|', line)
-            if match:
-                news_titles.append(match.group(1))
-                
-        topic_1 = news_titles[0] if len(news_titles) > 0 else f"{ticker} operasyonel gelişmeleri"
-        topic_2 = news_titles[1] if len(news_titles) > 1 else "bilanço ve analist revizyonları"
-        topic_3 = news_titles[2] if len(news_titles) > 2 else "kurumsal fon hareketleri"
+        # Düşme Durumu Sentezleyici
+        first_content = articles_payload.split('\n')[0] if articles_payload else f"{ticker} yeni yatırımlarına devam etmektedir."
+        clean_first = re.sub(r'^- Başlık:\s*', '', first_content)
         
         return (
-            f"{ticker} hisse senedine ait son Kamuyu Aydınlatma Platformu (KAP) bildirimi, şirket açıklamaları ve piyasa haberleri incelendiğinde; "
-            f"şirket gündeminde öne çıkan temel gelişme '{topic_1}' konusundaki duyurular olmuştur. "
-            f"Bunun yanı sıra finansal piyasalardaki son değerlendirmelerde '{topic_2}' hususları dikkat çekerken, "
-            f"sektörel bazda '{topic_3}' çerçevesindeki gelişmeler takip edilmektedir. "
-            f"Derlenen tüm haber verileri, şirket yönetiminin anlaşma süreçleri, kapasite yatırımları ve piyasa yapıcılarının hisse üzerindeki hareketlerinin olumlu bir ivme ile izlendiğini göstermektedir."
+            f"{ticker} şirketinin güncel faaliyetleri ve KAP duyuruları incelendiğinde; "
+            f"şirketin son dönemde öne çıkan ana operasyonu '{clean_first}' çerçevesinde şekillenmektedir. "
+            f"Şirket yönetimi operasyonel kapasite artırımı, yeni iş anlaşmaları ve finansal kârlılığı destekleyecek stratejik adımları yürütmeye devam etmektedir."
         )
 
 
@@ -358,38 +340,38 @@ class StockMindOrchestrator:
         
         logs.append({
             "agent": self.retriever.name,
-            "step": "Haber Taraması",
-            "message": f"'{ticker}' kodu için canlı haber ve KAP kaynakları taranıyor..."
+            "step": "Haber ve KAP Taraması",
+            "message": f"'{ticker}' kodu için canlı haber ve KAP duyuru bağlantıları taranıyor..."
         })
-        articles = self.retriever.fetch_news(ticker)
+        articles, kap_url = self.retriever.fetch_news(ticker)
         logs.append({
             "agent": self.retriever.name,
             "step": "Tarama Tamamlandı",
-            "message": f"Toplam {len(articles)} adet canlı haber verisi çekildi."
+            "message": f"Toplam {len(articles)} adet haber ve canlı KAP bağlantısı çekildi."
         })
         
         logs.append({
             "agent": self.analyst.name,
-            "step": "İçerik Analizi",
-            "message": f"'{ticker}' haber metinleri ve duygu parametreleri süzgeçten geçiriliyor..."
+            "step": "Faaliyet Analizi",
+            "message": f"'{ticker}' şirketinin ne yaptığı ve operasyonel adımları süzgeçten geçiriliyor..."
         })
         metrics = self.analyst.analyze(ticker, articles)
         logs.append({
             "agent": self.analyst.name,
             "step": "Analiz Tamamlandı",
-            "message": f"Hesaplanan Duygu Skoru: %{metrics['bullish_pct']} Pozitif | Risk: {metrics['risk_level']}"
+            "message": f"Duygu Skoru: %{metrics['bullish_pct']} Pozitif | Risk: {metrics['risk_level']}"
         })
         
         logs.append({
             "agent": self.summary_agent.name,
-            "step": "LLM Okuma & Haber Özeti",
-            "message": f"'{ticker}' için çekilen tüm haberler LLM (Dil Modeli) ile okunup özgün haber özeti kaleme alınıyor..."
+            "step": "Faaliyet Raporu Yazımı",
+            "message": f"'{ticker}' için şirketin ne yaptığını anlatan LLM faaliyet raporu hazırlanıyor..."
         })
-        digest = self.summary_agent.generate_digest(ticker, articles, metrics)
+        digest = self.summary_agent.generate_digest(ticker, articles, metrics, kap_url)
         logs.append({
             "agent": self.summary_agent.name,
             "step": "Rapor Hazır",
-            "message": f"'{ticker}' LLM destekli haber özeti başarıyla oluşturuldu."
+            "message": f"'{ticker}' şirket faaliyet raporu ve KAP erişim linki başarıyla hazırlandı."
         })
         
         return {

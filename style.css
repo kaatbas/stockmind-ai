@@ -346,8 +346,29 @@ header {
   transition: width 0.6s ease;
 }
 
+.kap-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-blue);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
+
+.kap-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
 /* Narrative News Summary Box */
 .news-narrative-box {
+
   background: rgba(11, 15, 25, 0.7);
   border: 1px solid var(--border-color);
   border-left: 4px solid var(--accent-blue);

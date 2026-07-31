@@ -1,6 +1,6 @@
 /**
  * StockMind AI - Dashboard Application Logic
- * Kurumsal Bütünleşik Haber Özeti Arayüzü
+ * Şirket Güncel Faaliyet Raporu ve KAP Entegrasyonu Arayüzü
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,12 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function runAnalysis(ticker) {
     ticker = ticker.toUpperCase();
     resetUIState(ticker);
-    appendTerminalLog("System", `'${ticker}' için haber analiz süreci başlatıldı.`);
+    appendTerminalLog("System", `'${ticker}' için haber ve KAP analiz süreci başlatıldı.`);
 
     try {
       // Agent 1 Active
       setAgentState(cardRetriever, badgeRetriever, "Çalışıyor...", true);
-      appendTerminalLog("News Retriever", `'${ticker}' için canlı KAP ve haber kaynakları taranıyor...`);
+      appendTerminalLog("News Retriever", `'${ticker}' haberleri ve canlı KAP bildirim bağlantısı çekiliyor...`);
       await sleep(400);
 
       // Fetch from API
@@ -73,11 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Agent 1 Complete
       setAgentState(cardRetriever, badgeRetriever, "Tamamlandı", false);
-      appendTerminalLog("News Retriever", `${data.result.articles.length} adet canlı haber metni çekildi.`);
+      appendTerminalLog("News Retriever", `${data.result.articles.length} adet haber ve KAP adresi alındı.`);
 
       // Agent 2 Active
       setAgentState(cardAnalyst, badgeAnalyst, "Çalışıyor...", true);
-      appendTerminalLog("Financial Analyst", `Haber detayları ve duygu dengesi analiz ediliyor...`);
+      appendTerminalLog("Financial Analyst", `Şirketin ne yaptığı ve güncel operasyonları süzgeçten geçiriliyor...`);
       await sleep(400);
 
       const metrics = data.result.metrics;
@@ -86,11 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Agent 3 Active
       setAgentState(cardSummary, badgeSummary, "Yazıyor...", true);
-      appendTerminalLog("Executive Summary", `Bütünleşik haber özet metni kaleme alınıyor...`);
+      appendTerminalLog("Executive Summary", `Şirket güncel faaliyet raporu kaleme alınıyor...`);
       await sleep(300);
 
       setAgentState(cardSummary, badgeSummary, "Tamamlandı", false);
-      appendTerminalLog("Executive Summary", `Haber özeti başarıyla tamamlandı.`);
+      appendTerminalLog("Executive Summary", `Şirket faaliyet raporu ve KAP linki başarıyla hazırlandı.`);
 
       // Render Results
       renderResults(data.result);
@@ -138,7 +138,17 @@ document.addEventListener('DOMContentLoaded', () => {
       `<span class="tag-badge">${c}</span>`
     ).join(' ');
 
+    const kapUrl = result.kap_url || `https://www.kap.org.tr/tr/bist-sirketler/${result.ticker}`;
+
     resultsContainer.innerHTML = `
+      <!-- KAP Fast Action Bar -->
+      <div style="margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2); padding:12px 16px; border-radius:8px;">
+        <span style="font-size:13px; font-weight:600; color:#fff;">Kamuyu Aydınlatma Platformu (KAP) Bildirimi:</span>
+        <a href="${kapUrl}" target="_blank" rel="noopener noreferrer" class="kap-btn">
+          Son KAP Bildirimine Git &rarr;
+        </a>
+      </div>
+
       <!-- Metrics Grid -->
       <div class="metrics-row">
         <div class="metric-box">
@@ -166,8 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- Unified News Summary Section (Bütünleşik Haber Özeti) -->
-      <h3 style="font-size:14px; font-weight:700; margin-bottom:12px; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Bütünleşik Haber ve KAP Duyuru Özeti</h3>
+      <!-- Company Operational Activity Summary (Şirket Güncelde Ne Yapıyor?) -->
+      <h3 style="font-size:14px; font-weight:700; margin-bottom:12px; color:#fff; text-transform:uppercase; letter-spacing:0.5px;">Şirket Güncel Faaliyet ve Operasyon Raporu</h3>
       <div class="news-narrative-box">
         <p class="narrative-text">${result.narrative_summary}</p>
       </div>
@@ -216,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetUIState(ticker) {
     resultsContainer.innerHTML = `
       <div class="placeholder-state">
-        <p><strong>${ticker}</strong> için KAP ve güncel haber özet metni hazırlanıyor...</p>
+        <p><strong>${ticker}</strong> için şirket güncel faaliyetleri ve KAP bildirimi çekiliyor...</p>
       </div>
     `;
     articlesCard.style.display = 'none';
