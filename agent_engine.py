@@ -292,7 +292,8 @@ class ExecutiveSummaryAgent:
                         method='POST'
                     )
                     
-                    with urllib.request.urlopen(req, timeout=25) as resp:
+                    with urllib.request.urlopen(req, timeout=45) as resp:
+
                         res_json = json.loads(resp.read().decode('utf-8'))
                         raw_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
                         
