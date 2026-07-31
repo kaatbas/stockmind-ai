@@ -30,7 +30,6 @@ venv/
 ENV/
 
 # Screenshots / Local media
-ss/
 
 .DS_Store
 Thumbs.db
