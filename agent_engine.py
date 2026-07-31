@@ -198,6 +198,8 @@ class ExecutiveSummaryAgent:
     3. Agent: Baş Editör ve Kurumsal LLM Stratejisti
     Taranan tüm haberleri ve KAP duyurularını Büyük Dil Modeli (Gemini LLM) ile okuyup anlar ve tek bir haber özeti paragrafı üretir.
     """
+    _cache = {}  # 10 dakikalık LLM yanıt önbelleği (Rate limit 429 engellemek için)
+
     def __init__(self):
         self.name = "Executive Summary Agent"
         self.role = "Baş Editör ve LLM Stratejisti"
@@ -205,14 +207,19 @@ class ExecutiveSummaryAgent:
     def generate_digest(self, ticker: str, articles: list, metrics: dict):
         print(f"[{self.name}] '{ticker}' için taranan tüm haberler LLM (Büyük Dil Modeli) ile okunup özetleniyor...")
         
-        # 1. Tüm haberlerin birleştirilmesi
-        articles_payload = "\n".join([
-            f"- Başlık: {art['title']} | Kaynak: {art['source']} | İçerik: {art['content']}"
-            for art in articles
-        ])
+        # Önbellek (Cache) Kontrolü
+        cache_key = f"{ticker}_{len(articles)}"
+        now_ts = datetime.datetime.now().timestamp()
         
-        # 2. LLM Çağrısı Denemesi (Gemini API veya Gelişmiş NLP Sentezi)
-        llm_summary = self._summarize_with_llm(ticker, articles_payload)
+        if cache_key in self._cache:
+            cached_data, cached_time = self._cache[cache_key]
+            if now_ts - cached_time < 600:  # 10 dakika geçerli
+                print(f"[{self.name}] '{ticker}' için önbellekteki (cached) LLM haberi kullanılıyor.")
+                llm_summary = cached_data
+            else:
+                llm_summary = self._fetch_and_cache_llm(ticker, articles, cache_key, now_ts)
+        else:
+            llm_summary = self._fetch_and_cache_llm(ticker, articles, cache_key, now_ts)
         
         b_pct = metrics["bullish_pct"]
         if b_pct >= 70:
@@ -231,6 +238,16 @@ class ExecutiveSummaryAgent:
             "articles": articles
         }
         return digest
+
+    def _fetch_and_cache_llm(self, ticker: str, articles: list, cache_key: str, now_ts: float) -> str:
+        articles_payload = "\n".join([
+            f"- Başlık: {art['title']} | Kaynak: {art['source']} | İçerik: {art['content']}"
+            for art in articles
+        ])
+        summary = self._summarize_with_llm(ticker, articles_payload)
+        self._cache[cache_key] = (summary, now_ts)
+        return summary
+
 
     def _summarize_with_llm(self, ticker: str, articles_payload: str) -> str:
         """
