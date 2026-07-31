@@ -252,35 +252,41 @@ class ExecutiveSummaryAgent:
                 print(f"[{self.name}] .env okuma uyarısı: {e}")
         
         if api_key and api_key != "buraya_google_gemini_api_keyinizi_yazin":
-            try:
-                print(f"[{self.name}] Canlı Google Gemini 1.5 Flash API ile metin özetleniyor...")
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-                
-                prompt_text = (
-                    f"Sen kıdemli bir Borsa ve Finans Analistisin. {ticker} hisse senedi için taranan şu güncel haber ve KAP duyurularını okuyup anla:\n\n"
-                    f"{articles_payload}\n\n"
-                    f"Görev: Yukarıdaki haberlerde geçen tüm anlaşmaları, uçak alımlarını, kârlılık verilerini, KAP duyurularını ve analist hedef fiyatlarını okuyarak "
-                    f"{ticker} hakkında 3-4 cümlelik akıcı, profesyonel, haber dilinde bütünleşik bir özet yaz. Hiçbir emoji kullanma."
-                )
-                
-                payload = {
-                    "contents": [{"parts": [{"text": prompt_text}]}]
-                }
-                
-                req = urllib.request.Request(
-                    url,
-                    data=json.dumps(payload).encode('utf-8'),
-                    headers={'Content-Type': 'application/json'},
-                    method='POST'
-                )
-                
-                with urllib.request.urlopen(req, timeout=8) as resp:
-                    res_json = json.loads(resp.read().decode('utf-8'))
-                    text_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
-                    if text_out:
-                        return text_out
-            except Exception as e:
-                print(f"[{self.name}] Gemini API Çağrı Hatası: {e}")
+            for model_name in ["gemini-2.0-flash", "gemini-2.0-flash-lite"]:
+                try:
+                    print(f"[{self.name}] Canlı Google {model_name} API ile metin özetleniyor...")
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+                    
+                    prompt_text = (
+                        f"Sen kıdemli bir Borsa ve Finans Analistisin. {ticker} hisse senedi için taranan şu güncel haber ve KAP duyurularını okuyup anla:\n\n"
+                        f"{articles_payload}\n\n"
+                        f"Görev: Yukarıdaki haberlerde geçen tüm anlaşmaları, uçak alımlarını, kârlılık verilerini, KAP duyurularını ve analist hedef fiyatlarını okuyarak "
+                        f"{ticker} hakkında 3-4 cümlelik akıcı, profesyonel, haber dilinde bütünleşik bir özet yaz. Hiçbir emoji kullanma."
+                    )
+                    
+                    payload = {
+                        "contents": [{"parts": [{"text": prompt_text}]}]
+                    }
+                    
+                    req = urllib.request.Request(
+                        url,
+                        data=json.dumps(payload).encode('utf-8'),
+                        headers={'Content-Type': 'application/json'},
+                        method='POST'
+                    )
+                    
+                    with urllib.request.urlopen(req, timeout=8) as resp:
+                        res_json = json.loads(resp.read().decode('utf-8'))
+                        text_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+                        if text_out:
+                            print(f"[{self.name}] Gemini LLM Yanıtı Başarıyla Alındı ✓")
+                            return text_out
+                except urllib.error.HTTPError as he:
+                    err_body = he.read().decode('utf-8', errors='ignore')
+                    print(f"[{self.name}] Gemini {model_name} API Uyarısı ({he.code}): {err_body[:150]}")
+                except Exception as e:
+                    print(f"[{self.name}] Gemini API Çağrı Hatası: {e}")
+
 
 
         # API Key yoksa veya çağrı düşerse: Akıllı Anlamsal Sentez Motoru
