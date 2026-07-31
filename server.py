@@ -9,6 +9,7 @@ import urllib.parse
 import json
 import os
 import sys
+import traceback
 from agent_engine import StockMindOrchestrator
 
 # Windows UTF-8 çıktı desteği
@@ -19,6 +20,23 @@ PORT = 8000
 orchestrator = StockMindOrchestrator()
 
 class StockMindRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
+
+    def do_HEAD(self):
+        parsed_path = urllib.parse.urlparse(self.path)
+        if parsed_path.path == '/api/analyze':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json; charset=utf-8')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            return
+        return super().do_HEAD()
+
     def do_GET(self):
         parsed_path = urllib.parse.urlparse(self.path)
         
@@ -38,10 +56,14 @@ class StockMindRequestHandler(http.server.SimpleHTTPRequestHandler):
                 json_bytes = json.dumps(result_data, ensure_ascii=False).encode('utf-8')
                 self.wfile.write(json_bytes)
             except Exception as e:
+                print(f"[Server Error] API Hatası ({ticker}): {e}")
+                traceback.print_exc()
+                
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json; charset=utf-8')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                err_bytes = json.dumps({"status": "error", "message": str(e)}).encode('utf-8')
+                err_bytes = json.dumps({"status": "error", "message": str(e)}, ensure_ascii=False).encode('utf-8')
                 self.wfile.write(err_bytes)
             return
 
