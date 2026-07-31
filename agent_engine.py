@@ -269,16 +269,16 @@ class ExecutiveSummaryAgent:
                 print(f"[{self.name}] .env okuma uyarısı: {e}")
         
         if api_key and api_key != "buraya_google_gemini_api_keyinizi_yazin":
-            for model_name in ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemma-4-26b-a4b-it"]:
+            for model_name in ["gemma-4-26b-a4b-it", "gemini-2.0-flash", "gemini-2.0-flash-lite"]:
                 try:
-                    print(f"[{self.name}] Canlı Google {model_name} API ile metin özetleniyor...")
+                    print(f"[{self.name}] Canlı Google {model_name} LLM Modeli ile haberler okunuyor ve özetleniyor...")
                     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
                     
                     prompt_text = (
                         f"Sen kıdemli bir Borsa ve Finans Analistisin. {ticker} hisse senedi için taranan şu güncel haber ve KAP duyurularını okuyup anla:\n\n"
                         f"{articles_payload}\n\n"
                         f"Görev: Yukarıdaki haberlerde geçen tüm anlaşmaları, uçak alımlarını, kârlılık verilerini, KAP duyurularını ve analist hedef fiyatlarını okuyarak "
-                        f"{ticker} hakkında 3-4 cümlelik akıcı, profesyonel, haber dilinde bütünleşik bir özet yaz. Hiçbir emoji kullanma."
+                        f"{ticker} hakkında 3 cümlelik akıcı, profesyonel, haber dilinde bütünleşik tek bir özet metni yaz. Sadece özet yanıtı ver. Düşünme adımlarını veya alternatif cümleleri yazma. Hiçbir emoji kullanma."
                     )
                     
                     payload = {
@@ -292,9 +292,14 @@ class ExecutiveSummaryAgent:
                         method='POST'
                     )
                     
-                    with urllib.request.urlopen(req, timeout=10) as resp:
+                    with urllib.request.urlopen(req, timeout=25) as resp:
                         res_json = json.loads(resp.read().decode('utf-8'))
-                        text_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+                        raw_out = res_json['candidates'][0]['content']['parts'][0]['text'].strip()
+                        
+                        # Eğer model düşünme adımları yazdıysa sadece son yanıt paragrafını al
+                        paragraphs = [p.strip() for p in raw_out.split('\n\n') if p.strip()]
+                        text_out = paragraphs[-1] if paragraphs else raw_out
+                        
                         if text_out:
                             print(f"[{self.name}] Google {model_name} LLM Yanıtı Başarıyla Alındı ✓")
                             return text_out
@@ -303,6 +308,7 @@ class ExecutiveSummaryAgent:
                     print(f"[{self.name}] Google {model_name} API Uyarısı ({he.code}): {err_body[:120]}")
                 except Exception as e:
                     print(f"[{self.name}] Gemini API Çağrı Hatası ({model_name}): {e}")
+
 
 
 
